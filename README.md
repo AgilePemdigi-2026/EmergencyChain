@@ -185,32 +185,31 @@ Generate application key:
 php artisan key:generate
 ```
 
-### Database Configuration
 
-Konfigurasikan koneksi database pada file `.env` menggunakan kredensial MySQL lokal.
+### Database Setup — Supabase PostgreSQL
 
-```env
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=emergency_chain
-DB_USERNAME=root
-DB_PASSWORD=
-```
+EmergencyChain menggunakan Supabase PostgreSQL
+sebagai database bersama untuk pengembangan.
 
-Nilai tersebut hanyalah contoh konfigurasi lokal. Database harus dibuat terlebih dahulu dan kredensial perlu disesuaikan dengan perangkat masing-masing.
+Konfigurasi koneksi database:
 
-Setelah skema database proyek tersedia, jalankan:
+1. Pastikan ekstensi PHP pdo_pgsql dan intl aktif.
+2. Salin .env.example menjadi .env.
+3. Isi DB_HOST, DB_USERNAME, dan DB_PASSWORD
+   berdasarkan Connection Parameters Supabase.
+4. Gunakan Session Pooler pada port 5432.
+5. Gunakan DB_SCHEMA=emergency_chain.
+6. Jalankan php artisan config:clear.
+7. Uji koneksi menggunakan php artisan db:show.
 
-```bash
-php artisan migrate
-```
+Catatan:
+- Jangan mengunggah file .env ke GitHub.
+- Jangan menjalankan migrate:fresh pada database bersama.
+- Migration dan Seeder dijalankan setelah
+  rancangan skema aplikasi disepakati tim.
+- Akses ke port database dapat dibatasi
+  oleh konfigurasi jaringan yang digunakan.
 
-Untuk menambahkan data awal setelah seeder siap:
-
-```bash
-php artisan db:seed
-```
 
 ### Run Application
 
