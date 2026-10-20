@@ -123,9 +123,10 @@
     <p class="mt-8 text-center text-sm text-slate-500">
         Belum punya akun?
 
-        <span class="font-semibold text-red-500">
-            Daftar
-        </span>
+        <a href="{{ route('register') }}"
+            class="font-semibold text-red-500 hover:text-red-600">
+                Daftar
+        </a>
     </p>
 
 @endsection
