@@ -12,7 +12,3 @@ Route::get('/register', function () {
     return view('auth.register');
 })->name('register');
 
-// Preview UI Logout (sementara)
-Route::get('/preview-logout', function () {
-    return view('auth.preview-logout');
-})->name('preview.logout');
