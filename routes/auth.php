@@ -1,14 +1,30 @@
+
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AuthController;
 
-// Halaman Login
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
+// Login dan Register
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])
+        ->name('login');
 
-// Halaman Register
-Route::get('/register', function () {
-    return view('auth.register');
-})->name('register');
+    Route::post('/login', [AuthController::class, 'login'])
+        ->name('login.store');
 
+    Route::get('/register', [AuthController::class, 'showRegister'])
+        ->name('register');
+
+    Route::post('/register', [AuthController::class, 'register'])
+        ->name('register.store');
+});
+
+// Dashboard dan Logout
+Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+    Route::post('/logout', [AuthController::class, 'logout'])
+        ->name('logout');
+});
