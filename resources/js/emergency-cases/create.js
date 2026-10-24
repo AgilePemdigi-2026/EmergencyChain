@@ -7,17 +7,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const jenis = document.querySelector('#jenis_kejadian');
     const kebutuhan = document.querySelector('#tingkat_kebutuhan');
     const kondisi = document.querySelector('#kondisi_kejadian');
-    const patokan = document.querySelector('#patokan_lokasi');
+    const alamat = document.querySelector('#alamat');
 
     const latitude = document.querySelector('#latitude');
     const longitude = document.querySelector('#longitude');
 
     const summaryJenis = document.querySelector('#summary-jenis');
     const summaryKebutuhan = document.querySelector('#summary-kebutuhan');
-
     const characterCount = document.querySelector('#character-count');
-    const patokanCount = document.querySelector('#patokan-count');
     const message = document.querySelector('#report-form-message');
+    const submitButton = document.querySelector('#submit-report');
 
     function updateSummary() {
         summaryJenis.textContent = jenis.value || 'Belum dipilih';
@@ -25,17 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
             kebutuhan.value || 'Belum dipilih';
 
         characterCount.textContent = `${kondisi.value.length}/500`;
-
-        if (patokan && patokanCount) {
-            patokanCount.textContent = `${patokan.value.length}/300`;
-        }
     }
 
-    function showMessage(text, isValid = false) {
+    function showMessage(text) {
         message.textContent = text;
-        message.className = isValid
-            ? 'mt-3 text-sm text-emerald-700'
-            : 'mt-3 text-sm text-red-600';
+        message.className = 'mt-3 text-sm text-red-600';
     }
 
     function validateReport() {
@@ -43,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { field: jenis, label: 'Jenis Kejadian' },
             { field: kebutuhan, label: 'Tingkat Kebutuhan' },
             { field: kondisi, label: 'Kondisi Kejadian' },
+            { field: alamat, label: 'Alamat Kejadian' },
         ];
 
         for (const item of requiredFields) {
@@ -51,6 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.field.focus();
                 return false;
             }
+        }
+
+        if (alamat.value.length > 100) {
+            showMessage('Alamat maksimal 100 karakter.');
+            alamat.focus();
+            return false;
         }
 
         const lat = Number(latitude.value);
@@ -67,10 +67,12 @@ document.addEventListener('DOMContentLoaded', () => {
             showMessage(
                 'Tentukan lokasi kejadian melalui GPS atau pilih titik pada peta.'
             );
+
             document.querySelector('#location-map')?.scrollIntoView({
                 behavior: 'smooth',
                 block: 'center',
             });
+
             return false;
         }
 
@@ -80,23 +82,24 @@ document.addEventListener('DOMContentLoaded', () => {
     jenis.addEventListener('change', updateSummary);
     kebutuhan.addEventListener('change', updateSummary);
     kondisi.addEventListener('input', updateSummary);
-    patokan?.addEventListener('input', updateSummary);
 
     form.addEventListener('submit', (event) => {
-        event.preventDefault();
+        if (!validateReport()) {
+            event.preventDefault();
+            return;
+        }
 
-        if (!validateReport()) return;
-
-        showMessage(
-            'Data laporan sudah lengkap dan siap diintegrasikan dengan backend.',
-            true
-        );
+        // Submit valid diteruskan ke backend Laravel.
+        submitButton.disabled = true;
+        submitButton.textContent = 'Mengirim Laporan...';
     });
 
     form.addEventListener('reset', () => {
         requestAnimationFrame(() => {
             updateSummary();
             message.textContent = '';
+            submitButton.disabled = false;
+            submitButton.textContent = 'Kirim Laporan';
         });
     });
 
