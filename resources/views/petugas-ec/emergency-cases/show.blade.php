@@ -15,6 +15,9 @@
         ?? 'bg-slate-100 text-slate-600';
 
     $waktuLaporan = \Carbon\Carbon::parse($case->waktu_laporan);
+    $waktuSejak = $waktuLaporan->diffForHumans(now(), [
+    'locale' => 'id',
+    ]);
 
     $lokasi = $case->lokasi;
     $pelapor = $case->pengguna;
@@ -67,7 +70,7 @@
                 Waktu Sejak Laporan
             </p>
             <p class="mt-1 text-sm font-semibold text-slate-700">
-                {{ $waktuLaporan->diffForHumans() }}
+                {{ $waktuSejak }}
             </p>
         </div>
 
@@ -350,9 +353,9 @@
                 </h2>
 
                 <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                    Petugas EC dapat memeriksa informasi laporan.
-                    Koreksi kondisi dan kebutuhan penanganan
-                    akan tersedia pada tahap integrasi Update.
+                    Petugas EC dapat memeriksa dan mengoreksi
+                    Kondisi Kejadian serta Kebutuhan Penanganan
+                    melalui tombol Edit Informasi.
                 </p>
             </section>
 
