@@ -113,52 +113,185 @@
             <section class="overflow-hidden rounded-xl border
                             border-slate-100 bg-white shadow-sm">
 
-                <div class="border-b border-slate-100 px-5 py-4">
+                <div class="flex items-center justify-between gap-3
+                            border-b border-slate-100 px-5 py-4">
                     <h2 class="text-sm font-semibold text-slate-700">
                         Informasi Kejadian
                     </h2>
+
+                    <button
+                        type="button"
+                        id="edit-case-button"
+                        class="rounded-lg border border-blue-200 px-4 py-2
+                            text-xs font-semibold text-blue-600
+                            hover:bg-blue-50"
+                    >
+                        Edit Informasi
+                    </button>
                 </div>
 
-                <div class="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2">
+                <div class="p-5">
 
-                    <div>
-                        <p class="text-xs text-slate-400">
-                            Jenis Kejadian
-                        </p>
-                        <p class="mt-1 text-sm font-medium text-slate-700">
-                            {{ $case->jenis_kejadian }}
-                        </p>
+                    {{-- Pesan setelah update berhasil --}}
+                    @if (session('success'))
+                        <div class="mb-5 rounded-lg bg-emerald-50 p-3
+                                    text-sm text-emerald-700" role="status">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
+                    {{-- Pesan validasi backend --}}
+                    @if ($errors->any())
+                        <div class="mb-5 rounded-lg bg-red-50 p-3
+                                    text-sm text-red-700" role="alert">
+                            <p class="font-semibold">
+                                Data Emergency Case gagal disimpan
+                            </p>
+                            <ul class="mt-2 list-disc pl-5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    {{-- Mode Lihat --}}
+                    <div
+                        id="case-view-mode"
+                        class="{{ $errors->any() ? 'hidden' : '' }}"
+                    >
+                        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+
+                            <div>
+                                <p class="text-xs text-slate-400">
+                                    Jenis Kejadian
+                                </p>
+                                <p class="mt-1 text-sm font-medium text-slate-700">
+                                    {{ $case->jenis_kejadian }}
+                                </p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs text-slate-400">
+                                    Status Laporan
+                                </p>
+                                <span class="mt-1 inline-flex rounded-full
+                                            px-3 py-1 text-xs font-semibold
+                                            {{ $statusStyle }}">
+                                    ● {{ $case->status_laporan }}
+                                </span>
+                            </div>
+
+                            <div>
+                                <p class="text-xs text-slate-400">
+                                    Kondisi Kejadian
+                                </p>
+                                <p class="mt-1 whitespace-pre-wrap break-words
+                                        text-sm text-slate-700">{{ $case->kondisi }}</p>
+                            </div>
+
+                            <div>
+                                <p class="text-xs text-slate-400">
+                                    Kebutuhan Penanganan
+                                </p>
+                                <p class="mt-1 text-sm text-slate-700">
+                                    {{ $case->kebutuhan }}
+                                </p>
+                            </div>
+
+                        </div>
                     </div>
 
-                    <div>
-                        <p class="text-xs text-slate-400">
-                            Status Laporan
-                        </p>
-                        <span class="mt-1 inline-flex rounded-full
-                                     px-3 py-1 text-xs font-semibold
-                                     {{ $statusStyle }}">
-                            ● {{ $case->status_laporan }}
-                        </span>
-                    </div>
+                    {{-- Mode Edit --}}
+                    <form
+                        id="case-edit-form"
+                        action="{{ route('petugas.ec.cases.update', ['caseId' => $case->case_id]) }}"
+                        method="POST"
+                        novalidate
+                        class="{{ $errors->any() ? '' : 'hidden' }} space-y-5"
+                    >
+                        @csrf
+                        @method('PATCH')
 
-                    <div>
-                        <p class="text-xs text-slate-400">
-                            Kondisi Kejadian
-                        </p>
-                        <p class="mt-1 whitespace-pre-wrap break-words
-                                  text-sm text-slate-700">{{ $case->kondisi }}</p>
-                    </div>
+                        <div>
+                            <label
+                                for="edit-kondisi"
+                                class="mb-2 block text-sm font-medium text-slate-700"
+                            >
+                                Kondisi Kejadian
+                                <span class="text-red-500">*</span>
+                            </label>
 
-                    <div>
-                        <p class="text-xs text-slate-400">
-                            Kebutuhan Penanganan
-                        </p>
-                        <p class="mt-1 whitespace-pre-wrap break-words
-                                  text-sm text-slate-700">{{ $case->kebutuhan }}</p>
-                    </div>
+                            <textarea
+                                id="edit-kondisi"
+                                name="kondisi"
+                                rows="4"
+                                maxlength="500"
+                                required
+                                class="w-full rounded-lg border border-slate-200
+                                    px-3 py-3 text-sm focus:border-blue-400
+                                    focus:outline-none"
+                            >{{ old('kondisi', $case->kondisi) }}</textarea>
+                        </div>
+
+                        <div>
+                            <label
+                                for="edit-kebutuhan"
+                                class="mb-2 block text-sm font-medium text-slate-700"
+                            >
+                                Kebutuhan Penanganan
+                                <span class="text-red-500">*</span>
+                            </label>
+
+                            <select
+                                id="edit-kebutuhan"
+                                name="kebutuhan"
+                                required
+                                class="w-full rounded-lg border border-slate-200
+                                    bg-white px-3 py-3 text-sm
+                                    focus:border-blue-400 focus:outline-none"
+                            >
+                                <option value="">Pilih kebutuhan</option>
+
+                                @foreach ([
+                                    'Butuh Penanganan Cepat',
+                                    'Butuh Penanganan Segera'
+                                ] as $pilihan)
+                                    <option
+                                        value="{{ $pilihan }}"
+                                        @selected(old('kebutuhan', $case->kebutuhan) === $pilihan)
+                                    >
+                                        {{ $pilihan }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="flex flex-wrap justify-end gap-3">
+                            <button
+                                type="button"
+                                id="cancel-case-edit"
+                                class="rounded-lg border border-slate-200
+                                    px-5 py-3 text-sm font-semibold
+                                    text-slate-600 hover:bg-slate-50"
+                            >
+                                Batal
+                            </button>
+
+                            <button
+                                type="submit"
+                                class="rounded-lg bg-red-500 px-5 py-3
+                                    text-sm font-semibold text-white
+                                    hover:bg-red-600"
+                            >
+                                Simpan Perubahan
+                            </button>
+                        </div>
+                    </form>
 
                 </div>
             </section>
+
 
             {{-- Lokasi Kejadian --}}
             <section class="overflow-hidden rounded-xl border
@@ -262,4 +395,35 @@
 
     </div>
 </div>
+
+{{-- Interaksi Edit Informasi --}}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const editButton = document.getElementById('edit-case-button');
+    const cancelButton = document.getElementById('cancel-case-edit');
+    const viewMode = document.getElementById('case-view-mode');
+    const editForm = document.getElementById('case-edit-form');
+
+    if (!editButton || !cancelButton || !viewMode || !editForm) {
+        return;
+    }
+
+    function setEditMode(editing) {
+        viewMode.classList.toggle('hidden', editing);
+        editForm.classList.toggle('hidden', !editing);
+        editButton.classList.toggle('hidden', editing);
+    }
+
+    editButton.addEventListener('click', () => {
+        setEditMode(true);
+    });
+
+    cancelButton.addEventListener('click', () => {
+        // Memulihkan nilai yang terakhir tersimpan.
+        editForm.reset();
+        setEditMode(false);
+    });
+});
+</script>
+
 @endsection

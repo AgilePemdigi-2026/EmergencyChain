@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\EmergencyCase;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Http\Requests\UpdateEmergencyCaseRequest;
+use Illuminate\Http\RedirectResponse;
 
 class EmergencyCaseController extends Controller
 {
@@ -32,5 +34,28 @@ class EmergencyCaseController extends Controller
         return view('petugas-ec.emergency-cases.show', [
             'case' => $case,
         ]);
+    }
+
+    public function update(
+        UpdateEmergencyCaseRequest $request,
+        int $caseId
+    ): RedirectResponse {
+        $case = EmergencyCase::findOrFail($caseId);
+
+        $validated = $request->validated();
+
+        $case->update([
+            'kondisi' => $validated['kondisi'],
+            'kebutuhan' => $validated['kebutuhan'],
+        ]);
+
+        return redirect()
+            ->route('petugas.ec.cases.show', [
+                'caseId' => $case->case_id,
+            ])
+            ->with(
+                'success',
+                'Emergency Case berhasil diperbarui'
+            );
     }
 }

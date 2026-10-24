@@ -17,4 +17,10 @@ Route::middleware('auth')->group(function () {
     )->whereNumber('caseId')
      ->name('petugas.ec.cases.show');
 
+    Route::patch(
+        '/petugas-ec/emergency-cases/{caseId}',
+        [EmergencyCaseController::class, 'update']
+    )->whereNumber('caseId')
+    ->name('petugas.ec.cases.update');
+
 });
