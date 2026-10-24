@@ -92,17 +92,32 @@
         </div>
     </nav>
 
-    {{-- Logout menempel di bawah --}}
+    {{-- Logout Petugas EC --}}
     <div class="mt-auto border-t border-slate-200 p-4">
-        <div class="flex items-center gap-3 rounded-xl
-                    px-4 py-3 text-sm font-medium text-slate-500">
-            <svg class="h-5 w-5" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor"
-                 stroke-width="1.8" aria-hidden="true">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                <path d="m16 17 5-5-5-5M21 12H9"/>
-            </svg>
-            Logout
-        </div>
+        <form action="{{ route('logout') }}" method="POST">
+            @csrf
+
+            <button
+                type="submit"
+                class="flex w-full items-center gap-3 rounded-xl
+                    px-4 py-3 text-sm font-medium text-slate-500
+                    transition hover:bg-rose-50 hover:text-red-500"
+            >
+                <svg
+                    class="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    aria-hidden="true"
+                >
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <path d="m16 17 5-5-5-5M21 12H9"/>
+                </svg>
+
+                <span>Logout</span>
+            </button>
+        </form>
     </div>
+
 </aside>

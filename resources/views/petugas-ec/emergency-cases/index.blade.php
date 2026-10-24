@@ -8,89 +8,7 @@
 @php
     // Data simulasi untuk pengembangan UI.
     // Akan diganti dengan data Eloquent setelah backend tersedia.
-    $cases = [
-        [
-            'id' => 'EC-2026-0011',
-            'jenis' => 'Kecelakaan Lalu Lintas',
-            'lokasi' => 'Jl. Kartini Timur',
-            'waktu' => 'Hari ini, 11.55',
-            'prioritas' => 'Kritis',
-            'status' => 'Dalam Penanganan',
-            'resource' => 'Ambulans 07',
-        ],
-        [
-            'id' => 'EC-2026-0010',
-            'jenis' => 'Kecelakaan Lalu Lintas',
-            'lokasi' => 'Jl. Ahmad Yani',
-            'waktu' => 'Hari ini, 11.40',
-            'prioritas' => 'Tinggi',
-            'status' => 'Menunggu',
-            'resource' => '-',
-        ],
-        [
-            'id' => 'EC-2026-0009',
-            'jenis' => 'Kebakaran',
-            'lokasi' => 'Jl. Diponegoro',
-            'waktu' => 'Hari ini, 10.10',
-            'prioritas' => 'Tinggi',
-            'status' => 'Dalam Penanganan',
-            'resource' => 'Damkar 02',
-        ],
-        [
-            'id' => 'EC-2026-0008',
-            'jenis' => 'Kondisi Medis Darurat',
-            'lokasi' => 'Jl. Raya Darmo',
-            'waktu' => 'Hari ini, 09.53',
-            'prioritas' => 'Tinggi',
-            'status' => 'Dalam Penanganan',
-            'resource' => 'Ambulans 05',
-        ],
-        [
-            'id' => 'EC-2026-0007',
-            'jenis' => 'Kecelakaan Lalu Lintas',
-            'lokasi' => 'Jl. Keninting',
-            'waktu' => 'Hari ini, 09.23',
-            'prioritas' => 'Sedang',
-            'status' => 'Selesai',
-            'resource' => 'Ambulans 03',
-        ],
-        [
-            'id' => 'EC-2026-0006',
-            'jenis' => 'Kondisi Medis Darurat',
-            'lokasi' => 'Jl. Gebang',
-            'waktu' => 'Hari ini, 09.20',
-            'prioritas' => 'Kritis',
-            'status' => 'Selesai',
-            'resource' => 'Ambulans 01',
-        ],
-        [
-            'id' => 'EC-2026-0005',
-            'jenis' => 'Pohon Tumbang',
-            'lokasi' => 'Jl. Ngagel',
-            'waktu' => 'Hari ini, 08.01',
-            'prioritas' => 'Sedang',
-            'status' => 'Selesai',
-            'resource' => 'BPBD 01',
-        ],
-        [
-            'id' => 'EC-2026-0004',
-            'jenis' => 'Kecelakaan Lalu Lintas',
-            'lokasi' => 'Jl. Mulyosari',
-            'waktu' => 'Hari ini, 07.56',
-            'prioritas' => 'Tinggi',
-            'status' => 'Selesai',
-            'resource' => 'Ambulans 07',
-        ],
-        [
-            'id' => 'EC-2026-0003',
-            'jenis' => 'Kecelakaan Lalu Lintas',
-            'lokasi' => 'Jl. Kenjeran',
-            'waktu' => 'Hari ini, 06.36',
-            'prioritas' => 'Sedang',
-            'status' => 'Selesai',
-            'resource' => 'Ambulans 03',
-        ],
-    ];
+    
 
     $priorityColors = [
         'Kritis' => 'bg-red-100 text-red-600',
@@ -133,18 +51,6 @@
         >
 
         <select
-            id="priority-filter"
-            aria-label="Filter prioritas"
-            class="rounded-lg border border-slate-200
-                   bg-white px-3 py-3 text-sm"
-        >
-            <option value="">Semua Prioritas</option>
-            <option value="Kritis">Kritis</option>
-            <option value="Tinggi">Tinggi</option>
-            <option value="Sedang">Sedang</option>
-        </select>
-
-        <select
             id="status-filter"
             aria-label="Filter status"
             class="rounded-lg border border-slate-200
@@ -174,87 +80,123 @@
                 border-slate-100 bg-white shadow-sm">
 
         <div class="w-full overflow-x-auto">
-            <table class="w-full min-w-[850px] text-left text-xs">
+            <table class="w-full min-w-[750px] text-left text-xs">
 
                 <thead class="bg-rose-50 text-[10px]
-                              uppercase tracking-wide text-slate-500">
+                            uppercase tracking-wide text-slate-500">
                     <tr>
                         <th class="px-4 py-4">Case ID</th>
                         <th class="px-4 py-4">Jenis Kejadian</th>
                         <th class="px-4 py-4">Lokasi</th>
                         <th class="px-4 py-4">Waktu</th>
-                        <th class="px-4 py-4">Prioritas</th>
                         <th class="px-4 py-4">Status</th>
                         <th class="px-4 py-4">Resource</th>
-                        <th class="px-4 py-4"></th>
+                        <th class="px-4 py-4">Aksi</th>
                     </tr>
                 </thead>
 
-                <tbody id="case-table-body" class="divide-y divide-slate-100">
-                    @foreach ($cases as $case)
+                <tbody
+                    id="case-table-body"
+                    class="divide-y divide-slate-100"
+                >
+                    @forelse ($cases as $case)
+                        @php
+                            $statusClass = match ($case->status_laporan) {
+                                'Menunggu' => 'bg-amber-100 text-amber-700',
+                                'Dalam Penanganan' => 'bg-red-100 text-red-600',
+                                'Selesai' => 'bg-emerald-100 text-emerald-700',
+                                default => 'bg-slate-100 text-slate-600',
+                            };
+                        @endphp
+
                         <tr
                             class="case-row hover:bg-slate-50"
-                            data-search="{{ strtolower($case['id'] . ' ' . $case['jenis'] . ' ' . $case['lokasi']) }}"
-                            data-priority="{{ $case['prioritas'] }}"
-                            data-status="{{ $case['status'] }}"
-                        >   
+                            data-search="{{ strtolower(
+                                $case->case_id . ' ' .
+                                $case->jenis_kejadian . ' ' .
+                                ($case->lokasi?->alamat ?? '')
+                            ) }}"
+                            data-status="{{ $case->status_laporan }}"
+                        >
+                            {{-- Case ID --}}
                             <td class="whitespace-nowrap px-4 py-4 font-semibold">
                                 <a
-                                    href="{{ route('petugas.ec.cases.show', ['caseId' => $case['id']]) }}"
+                                    href="{{ route('petugas.ec.cases.show', ['caseId' => $case->case_id]) }}"
                                     class="text-blue-500 hover:underline"
                                 >
-                                    {{ $case['id'] }}
+                                    {{ $case->case_id }}
                                 </a>
                             </td>
 
+                            {{-- Jenis Kejadian --}}
                             <td class="px-4 py-4">
-                                {{ $case['jenis'] }}
+                                {{ $case->jenis_kejadian }}
                             </td>
 
+                            {{-- Lokasi --}}
                             <td class="px-4 py-4">
-                                {{ $case['lokasi'] }}
+                                {{ $case->lokasi?->alamat ?? 'Tidak tersedia' }}
                             </td>
 
+                            {{-- Waktu Laporan --}}
                             <td class="whitespace-nowrap px-4 py-4">
-                                {{ $case['waktu'] }}
+                                {{ \Carbon\Carbon::parse($case->waktu_laporan)->format('d/m/Y H:i') }}
                             </td>
 
+                            {{-- Status --}}
                             <td class="px-4 py-4">
-                                <span class="inline-block whitespace-nowrap rounded-full
-                                             px-3 py-1 text-[11px] font-semibold
-                                             {{ $priorityColors[$case['prioritas']] }}">
-                                    ● {{ $case['prioritas'] }}
+                                <span class="inline-block whitespace-nowrap
+                                            rounded-full px-3 py-1
+                                            text-[11px] font-semibold
+                                            {{ $statusClass }}">
+                                    ● {{ $case->status_laporan }}
                                 </span>
                             </td>
 
-                            <td class="px-4 py-4">
-                                <span class="inline-block whitespace-nowrap rounded-full
-                                             px-3 py-1 text-[11px] font-semibold
-                                             {{ $statusColors[$case['status']] }}">
-                                    ● {{ $case['status'] }}
-                                </span>
+                            {{-- Resource: belum ada Assignment --}}
+                            <td class="whitespace-nowrap px-4 py-4 text-slate-500">
+                                Belum ditugaskan
                             </td>
 
-                            <td class="whitespace-nowrap px-4 py-4">
-                                {{ $case['resource'] }}
-                            </td>
-
+                            {{-- Aksi Detail --}}
                             <td class="px-4 py-4">
                                 <a
-                                    href="{{ route('petugas.ec.cases.show', ['caseId' => $case['id']]) }}"
-                                    aria-label="Lihat detail {{ $case['id'] }}"
+                                    href="{{ route('petugas.ec.cases.show', ['caseId' => $case->case_id]) }}"
+                                    aria-label="Lihat detail Emergency Case {{ $case->case_id }}"
                                     class="inline-flex h-8 w-8 items-center
-                                        justify-center rounded-lg text-blue-500
-                                        hover:bg-blue-50"
+                                        justify-center rounded-lg
+                                        text-blue-500 hover:bg-blue-50"
                                 >
                                     <span aria-hidden="true">›</span>
                                 </a>
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td
+                                colspan="7"
+                                class="px-4 py-10 text-center
+                                    text-sm text-slate-500"
+                            >
+                                Belum ada Emergency Case.
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
+
+        {{-- Hasil pencarian kosong --}}
+        <div
+            id="no-case-results"
+            class="hidden px-6 py-10 text-center
+                text-sm text-slate-500"
+            role="status"
+        >
+            Tidak ada Emergency Case yang sesuai dengan pencarian.
+        </div>
+    </div>
+
 
         <div id="no-case-results"
              class="hidden px-6 py-10 text-center text-sm text-slate-500"
@@ -265,28 +207,27 @@
 
     <p id="case-result-count"
        class="mt-4 text-center text-xs text-slate-500"
-       aria-live="polite">
-        Menampilkan {{ count($cases) }} laporan contoh
-    </p>
-
-    <p class="mt-2 text-center text-xs text-slate-400">
-        Data simulasi frontend. Belum terhubung ke database.
+       aria-live="polite"
+    >
+        Menampilkan {{ count($cases) }} laporan
     </p>
 
 </div>
 
-{{-- Filter frontend sementara --}}
+{{-- Pencarian dan filter Emergency Case --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const search = document.getElementById('case-search');
-    const priority = document.getElementById('priority-filter');
     const status = document.getElementById('status-filter');
-    const applyButton = document.getElementById('apply-case-filter');
+    const button = document.getElementById('apply-case-filter');
+
     const rows = [...document.querySelectorAll('.case-row')];
     const noResults = document.getElementById('no-case-results');
     const resultCount = document.getElementById('case-result-count');
 
-    if (!search || !priority || !status || !applyButton) return;
+    if (!search || !status || !button || !noResults || !resultCount) {
+        return;
+    }
 
     function applyFilters() {
         const keyword = search.value.trim().toLocaleLowerCase('id-ID');
@@ -296,16 +237,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const matchesSearch =
                 row.dataset.search.includes(keyword);
 
-            const matchesPriority =
-                !priority.value ||
-                row.dataset.priority === priority.value;
-
             const matchesStatus =
                 !status.value ||
                 row.dataset.status === status.value;
 
-            const visible =
-                matchesSearch && matchesPriority && matchesStatus;
+            const visible = matchesSearch && matchesStatus;
 
             row.classList.toggle('hidden', !visible);
 
@@ -313,14 +249,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         noResults.classList.toggle('hidden', visibleCount !== 0);
+
         resultCount.textContent =
-            `Menampilkan ${visibleCount} dari ${rows.length} laporan contoh`;
+            `Menampilkan ${visibleCount} dari ${rows.length} laporan`;
     }
 
-    applyButton.addEventListener('click', applyFilters);
+    button.addEventListener('click', applyFilters);
     search.addEventListener('input', applyFilters);
-    priority.addEventListener('change', applyFilters);
-    status.addEventListener('change', applyFilters);
+    
 });
 </script>
+
 @endsection
