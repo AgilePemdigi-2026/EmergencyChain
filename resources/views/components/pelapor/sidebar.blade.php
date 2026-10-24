@@ -59,11 +59,22 @@
         </div>
     </nav>
 
-    {{-- Logout, sementara menunggu modul Auth Yana --}}
+
+    
+{{-- Logout --}}
     <div class="mt-auto border-t border-slate-200 p-4">
-        <div class="flex items-center gap-3
-                    rounded-xl px-4 py-3
-                    text-sm text-slate-400">
+        <button
+            type="button"
+            data-logout-open
+            class="flex w-full items-center gap-3
+                rounded-xl px-4 py-3
+                text-left text-sm font-medium
+                text-slate-500 transition
+                hover:bg-red-50 hover:text-red-500
+                focus-visible:outline-2
+                focus-visible:outline-offset-2
+                focus-visible:outline-red-500"
+        >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="18"
@@ -80,8 +91,7 @@
                 <path d="m16 17 5-5-5-5" />
                 <path d="M21 12H9" />
             </svg>
-
             Logout
-        </div>
+        </button>
     </div>
 </aside>

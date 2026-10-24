@@ -27,6 +27,7 @@ class AuthController extends Controller
                 'confirmed',
                 Password::min(8)->mixedCase()->numbers()->symbols(),
             ],
+            'agreement' => ['accepted'],
         ]);
 
         $pengguna = Pengguna::create([
