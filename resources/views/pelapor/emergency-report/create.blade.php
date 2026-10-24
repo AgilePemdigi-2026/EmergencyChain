@@ -26,9 +26,12 @@
         {{-- Form --}}
         <form
             id="emergency-report-form"
+            action="{{ route('pelapor.laporan.store') }}"
+            method="POST"
             class="min-w-0 space-y-5"
             novalidate
         >
+            @csrf
             {{-- Informasi Kejadian --}}
             <section
                 class="rounded-xl border border-slate-100
@@ -146,24 +149,6 @@
                     </p>
                 </div>
 
-                <div class="mt-5">
-                    <label
-                        for="informasi_tambahan"
-                        class="mb-2 block text-sm font-medium"
-                    >
-                        Informasi Tambahan (opsional)
-                    </label>
-
-                    <textarea
-                        id="informasi_tambahan"
-                        name="informasi_tambahan"
-                        rows="3"
-                        placeholder="Tambahkan informasi lain yang dapat membantu petugas..."
-                        class="w-full rounded-lg border
-                               border-slate-200 px-3 py-3 text-sm
-                               focus:border-red-400 focus:outline-none"
-                    ></textarea>
-                </div>
             </section>
 
             {{-- Lokasi --}}
@@ -222,43 +207,33 @@
                     </p>
                 </div>
 
-                {{-- Patokan Lokasi --}}
                 <div class="mt-4">
                     <label
-                        for="patokan_lokasi"
+                        for="alamat"
                         class="mb-2 block text-sm font-medium text-slate-700"
                     >
-                        Patokan Lokasi
-                        <span class="font-normal text-slate-400">(opsional)</span>
+                        Alamat Kejadian
+                        <span class="text-red-500">*</span>
                     </label>
 
-                    <textarea
-                        id="patokan_lokasi"
-                        name="patokan_lokasi"
-                        rows="3"
-                        maxlength="300"
-                        placeholder="Contoh: Depan gerbang kampus, dekat halte bus, atau masuk gang sebelah minimarket."
-                        class="w-full resize-y rounded-lg border border-slate-200
-                            bg-white px-3 py-3 text-sm text-slate-700
-                            placeholder:text-slate-400 focus:border-red-400
-                            focus:outline-none focus:ring-2 focus:ring-red-100"
-                        aria-describedby="patokan-help"
-                    ></textarea>
+                    <input
+                        type="text"
+                        id="alamat"
+                        name="alamat"
+                        value="{{ old('alamat') }}"
+                        maxlength="100"
+                        required
+                        placeholder="Masukkan alamat atau keterangan lokasi kejadian"
+                        class="w-full rounded-lg border border-slate-200
+                            bg-white px-3 py-3 text-sm
+                            focus:border-red-400 focus:outline-none"
+                    >
 
-                    <div class="mt-1 flex items-start justify-between gap-3">
-                        <p id="patokan-help" class="text-xs leading-relaxed text-slate-400">
-                            Tambahkan petunjuk agar petugas lebih mudah menemukan lokasi kejadian.
-                        </p>
-
-                        <span
-                            id="patokan-count"
-                            class="shrink-0 text-xs text-slate-400"
-                        >
-                            0/300
-                        </span>
-                    </div>
+                    <p class="mt-1 text-xs text-slate-400">
+                        Tulis alamat sejelas mungkin agar petugas dapat menemukan lokasi.
+                        Maksimal 100 karakter.
+                    </p>
                 </div>
-
 
 
                 {{-- Informasi Lokasi --}}
@@ -305,6 +280,23 @@
                    bg-white p-5 shadow-sm
                    sm:p-6 lg:sticky lg:top-5"
         >
+            {{-- Pesan berhasil setelah laporan tersimpan --}}
+            @if (session('success'))
+                <div
+                    class="mb-5 rounded-lg border border-emerald-200
+                        bg-emerald-50 p-4 text-emerald-800"
+                    role="status"
+                >
+                    <p class="text-sm font-semibold">
+                        Laporan berhasil dikirim!
+                    </p>
+
+                    <p class="mt-1 text-xs">
+                        {{ session('success') }}
+                    </p>
+                </div>
+            @endif
+
             <h2 class="mb-5 font-semibold">Ringkasan Laporan</h2>
 
             <div class="space-y-4">
@@ -355,21 +347,32 @@
                     text-sm font-semibold text-white
                     transition hover:bg-red-600"
             >
-                Periksa Laporan
+                Kirim Laporan
             </button>
 
             {{-- Tempat menampilkan pesan validasi --}}
+            @if ($errors->any())
+                <div
+                    class="mb-3 rounded-lg bg-red-50 p-3
+                        text-sm text-red-700"
+                    role="alert"
+                >
+                    Data laporan belum lengkap atau tidak valid.
+                    Silakan periksa kembali isian laporan.
+
+                    <ul class="mt-2 list-disc pl-5">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
             <p
                 id="report-form-message"
                 class="mt-3 text-sm"
                 role="status"
                 aria-live="polite"
             ></p>            
-
-            <p class="mt-2 text-center text-xs text-slate-400">
-                Fitur ini masih dalam tahap validasi.
-                Laporan belum dikirim ke sistem.
-            </p>
 
             <button
                 type="reset"
@@ -382,9 +385,6 @@
                 Batal
             </button>
 
-            <p class="mt-3 text-center text-xs text-slate-400">
-                Penyimpanan laporan belum diaktifkan.
-            </p>
         </aside>
     </div>
 </div>

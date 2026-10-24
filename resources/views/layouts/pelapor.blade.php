@@ -224,6 +224,6 @@
         });
     </script>
     {{-- Modal Konfirmasi Logout --}}
-    @include('components.logout-modal')x
+    @include('components.logout-modal')
 </body>
 </html>
