@@ -71,14 +71,23 @@
         </button>
 
         <!-- Konfirmasi Logout -->
-        <a href="{{ route('login') }}"
-            class="flex w-full items-center justify-center
-                rounded-xl bg-red-500 px-4 py-3
-                text-sm font-semibold text-white
-                transition hover:bg-red-600">
-            
+        <form action="{{ route('logout') }}" method="POST">
+            @csrf
+
+            <button
+                type="submit"
+                class="flex w-full items-center justify-center
+                    rounded-xl bg-red-500 px-4 py-3
+                    text-sm font-semibold text-white
+                    transition hover:bg-red-600
+                    focus-visible:outline-2
+                    focus-visible:outline-offset-2
+                    focus-visible:outline-red-500"
+                >   
                 Ya, Keluar
-        </a>
+            </button>
+        </form>
+
 
     </div>
 </dialog>

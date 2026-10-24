@@ -223,6 +223,7 @@
             });
         });
     </script>
-
+    {{-- Modal Konfirmasi Logout --}}
+    @include('components.logout-modal')x
 </body>
 </html>

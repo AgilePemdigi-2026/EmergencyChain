@@ -20,14 +20,27 @@
     </div>
 
     <!-- Form Register -->
-    <form class="space-y-6">
+    <form action="{{ route('register.store') }}"
+          method="POST"
+          class="space-y-6">
+
+        @csrf
+
+        <!-- Pesan Error -->
+        @if ($errors->any())
+            <div class="rounded-xl border border-red-200
+                        bg-red-50 px-4 py-3 text-sm text-red-600"
+                 role="alert">
+                Periksa kembali data pendaftaran Anda.
+            </div>
+        @endif
 
         <!-- Grid Input -->
         <div class="grid grid-cols-1 gap-x-4 gap-y-5 sm:grid-cols-2">
 
             <!-- Nama Lengkap -->
             <div>
-                <label for="name"
+                <label for="nama"
                        class="mb-2 block text-sm font-medium text-slate-800">
                     Nama Lengkap
                     <span class="text-red-500">*</span>
@@ -35,18 +48,27 @@
 
                 <input
                     type="text"
-                    id="name"
-                    name="name"
+                    id="nama"
+                    name="nama"
+                    value="{{ old('nama') }}"
                     placeholder="Masukkan nama lengkap"
                     autocomplete="name"
+                    maxlength="100"
                     required
-                    class="w-full rounded-xl border border-slate-200
+                    class="w-full rounded-xl border
+                           @error('nama') border-red-500 @else border-slate-200 @enderror
                            bg-white px-4 py-3 text-sm text-slate-800
                            outline-none transition
                            placeholder:text-slate-400
                            focus:border-red-500
                            focus:ring-2 focus:ring-red-100"
                 >
+
+                @error('nama')
+                    <p class="mt-2 text-xs text-red-500">
+                        {{ $message }}
+                    </p>
+                @enderror
             </div>
 
             <!-- Email -->
@@ -61,16 +83,59 @@
                     type="email"
                     id="email"
                     name="email"
+                    value="{{ old('email') }}"
                     placeholder="Masukkan email"
                     autocomplete="email"
+                    maxlength="100"
                     required
-                    class="w-full rounded-xl border border-slate-200
+                    class="w-full rounded-xl border
+                           @error('email') border-red-500 @else border-slate-200 @enderror
                            bg-white px-4 py-3 text-sm text-slate-800
                            outline-none transition
                            placeholder:text-slate-400
                            focus:border-red-500
                            focus:ring-2 focus:ring-red-100"
                 >
+
+                @error('email')
+                    <p class="mt-2 text-xs text-red-500">
+                        {{ $message }}
+                    </p>
+                @enderror
+            </div>
+
+            <!-- Nomor Telepon -->
+            <div>
+                <label for="no_telp"
+                       class="mb-2 block text-sm font-medium text-slate-800">
+                    Nomor Telepon
+                    <span class="text-red-500">*</span>
+                </label>
+
+                <input
+                    type="tel"
+                    id="no_telp"
+                    name="no_telp"
+                    value="{{ old('no_telp') }}"
+                    placeholder="Contoh: 081234567890"
+                    autocomplete="tel"
+                    inputmode="tel"
+                    maxlength="20"
+                    required
+                    class="w-full rounded-xl border
+                           @error('no_telp') border-red-500 @else border-slate-200 @enderror
+                           bg-white px-4 py-3 text-sm text-slate-800
+                           outline-none transition
+                           placeholder:text-slate-400
+                           focus:border-red-500
+                           focus:ring-2 focus:ring-red-100"
+                >
+
+                @error('no_telp')
+                    <p class="mt-2 text-xs text-red-500">
+                        {{ $message }}
+                    </p>
+                @enderror
             </div>
 
             <!-- Password -->
@@ -90,7 +155,8 @@
                         autocomplete="new-password"
                         minlength="8"
                         required
-                        class="w-full rounded-xl border border-slate-200
+                        class="w-full rounded-xl border
+                               @error('password') border-red-500 @else border-slate-200 @enderror
                                bg-white py-3 pl-4 pr-12
                                text-sm text-slate-800
                                outline-none transition
@@ -105,6 +171,7 @@
                         id="togglePassword"
                         aria-label="Tampilkan password"
                         aria-pressed="false"
+                        aria-controls="password"
                         class="absolute inset-y-0 right-0 flex
                                items-center px-4 text-slate-400
                                hover:text-red-500"
@@ -126,28 +193,36 @@
                 </div>
 
                 <p class="mt-2 text-xs text-slate-400">
-                    Minimal 8 karakter, huruf besar, kecil, dan angka.
+                    Minimal 8 karakter, huruf besar, huruf kecil,
+                    angka, dan simbol.
                 </p>
+
+                @error('password')
+                    <p class="mt-2 text-xs text-red-500">
+                        {{ $message }}
+                    </p>
+                @enderror
             </div>
 
-            <!-- Nomor Telepon -->
+            <!-- Konfirmasi Password -->
             <div>
-                <label for="phone"
+                <label for="password_confirmation"
                        class="mb-2 block text-sm font-medium text-slate-800">
-                    Nomor Telepon
+                    Konfirmasi Password
                     <span class="text-red-500">*</span>
                 </label>
 
                 <input
-                    type="tel"
-                    id="phone"
-                    name="phone"
-                    placeholder="Contoh: 081234567890"
-                    autocomplete="tel"
-                    inputmode="tel"
+                    type="password"
+                    id="password_confirmation"
+                    name="password_confirmation"
+                    placeholder="Masukkan ulang password"
+                    autocomplete="new-password"
+                    minlength="8"
                     required
-                    class="w-full rounded-xl border border-slate-200
-                           bg-white px-4 py-3 text-sm text-slate-800
+                    class="w-full rounded-xl border
+                           border-slate-200 bg-white
+                           px-4 py-3 text-sm text-slate-800
                            outline-none transition
                            placeholder:text-slate-400
                            focus:border-red-500
@@ -163,9 +238,10 @@
                 type="checkbox"
                 id="agreement"
                 name="agreement"
+                value="1"
+                {{ old('agreement') ? 'checked' : '' }}
                 required
-                class="mt-1 h-4 w-4 shrink-0
-                       accent-red-500"
+                class="mt-1 h-4 w-4 shrink-0 accent-red-500"
             >
 
             <label for="agreement"
@@ -177,7 +253,7 @@
 
         <!-- Tombol Daftar -->
         <button
-            type="button"
+            type="submit"
             class="w-full rounded-xl bg-red-500
                    px-4 py-3 text-sm font-semibold
                    text-white shadow-md shadow-red-100
@@ -215,10 +291,12 @@
             const isHidden = passwordInput.type === 'password';
 
             passwordInput.type = isHidden ? 'text' : 'password';
+
             toggleButton.setAttribute(
                 'aria-label',
                 isHidden ? 'Sembunyikan password' : 'Tampilkan password'
             );
+
             toggleButton.setAttribute(
                 'aria-pressed',
                 String(isHidden)

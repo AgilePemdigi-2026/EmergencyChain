@@ -26,28 +26,43 @@
     </div>
 
     <!-- Form Login -->
-    <form action="#" method="POST" class="space-y-5">
+    <form action="{{ route('login.store') }}"
+          method="POST"
+          class="space-y-5">
 
         @csrf
 
-        <!-- Username / Email -->
+        <!-- Pesan Error Login -->
+        @if ($errors->any())
+            <div class="rounded-xl border border-red-200
+                        bg-red-50 px-4 py-3
+                        text-sm text-red-600"
+                 role="alert">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
+        <!-- Email -->
         <div>
             <label for="email"
                    class="mb-2 block text-sm
                           font-medium text-slate-800">
-                Username / Email
+                Email
             </label>
 
             <input
-                type="text"
+                type="email"
                 id="email"
                 name="email"
-                placeholder="Masukkan username atau email"
+                value="{{ old('email') }}"
+                placeholder="Masukkan email"
                 autocomplete="username"
                 required
+                autofocus
                 class="w-full rounded-xl border
-                       border-slate-200 bg-white
-                       px-4 py-3 text-sm text-slate-800
+                       @error('email') border-red-500 @else border-slate-200 @enderror
+                       bg-white px-4 py-3
+                       text-sm text-slate-800
                        outline-none transition
                        placeholder:text-slate-400
                        focus:border-red-500
@@ -71,8 +86,9 @@
                 autocomplete="current-password"
                 required
                 class="w-full rounded-xl border
-                       border-slate-200 bg-white
-                       px-4 py-3 text-sm text-slate-800
+                       @error('password') border-red-500 @else border-slate-200 @enderror
+                       bg-white px-4 py-3
+                       text-sm text-slate-800
                        outline-none transition
                        placeholder:text-slate-400
                        focus:border-red-500
@@ -90,6 +106,8 @@
                 <input
                     type="checkbox"
                     name="remember"
+                    value="1"
+                    {{ old('remember') ? 'checked' : '' }}
                     class="h-4 w-4 rounded
                            border-slate-200
                            accent-red-500"
@@ -98,6 +116,7 @@
                 Ingat saya
             </label>
 
+            <!-- Tampilan sementara, fitur lupa password belum tersedia -->
             <span class="text-sm font-medium
                          text-red-500">
                 Lupa password?
@@ -107,7 +126,7 @@
 
         <!-- Tombol Login -->
         <button
-            type="button"
+            type="submit"
             class="w-full rounded-xl bg-red-500
                    px-4 py-3 text-sm font-semibold
                    text-white transition
@@ -124,8 +143,8 @@
         Belum punya akun?
 
         <a href="{{ route('register') }}"
-            class="font-semibold text-red-500 hover:text-red-600">
-                Daftar
+           class="font-semibold text-red-500 hover:text-red-600">
+            Daftar
         </a>
     </p>
 
