@@ -24,9 +24,12 @@ Homestead.yaml
 Thumbs.db
 
 # Playwright test artifacts
+# Playwright / BDD generated files
 /playwright-report/
 /test-results/
 /blob-report/
+.features-gen/
+bdd-reports/
 
 # Local test environment
 .env.*
