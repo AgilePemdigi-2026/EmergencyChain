@@ -40,7 +40,8 @@ class AuthController extends Controller
         Auth::login($pengguna);
         $request->session()->regenerate();
 
-        return redirect('/dashboard')
+        return redirect()
+            ->route('pelapor.laporan.create')
             ->with('success', 'Registrasi berhasil!');
     }
 
@@ -63,8 +64,17 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+        return match (Auth::user()->role) {
+            'pelapor' => redirect()
+                ->route('pelapor.laporan.create'),
+            'petugas_ec' => redirect()
+                ->route('petugas.ec.cases.index'),
 
-        return redirect()->intended('/dashboard');
+            default => abort(
+                403,
+                'Halaman untuk role akun ini belum tersedia.'
+            ),
+        };
     }
 
     public function logout(Request $request)
