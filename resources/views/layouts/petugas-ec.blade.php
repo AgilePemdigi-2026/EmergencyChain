@@ -79,6 +79,6 @@
         </div>
 
     </div>
-
+    @include('components.logout-modal')
 </body>
 </html>
