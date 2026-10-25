@@ -29,6 +29,7 @@ Thumbs.db
 /test-results/
 /blob-report/
 .features-gen/
+bdd-reports/
 
 # Local test environment
 .env.*

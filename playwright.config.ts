@@ -1,6 +1,6 @@
-
 import { defineConfig } from '@playwright/test';
-import { defineBddConfig } from 'playwright-bdd';
+import { defineBddConfig, cucumberReporter } from 'playwright-bdd';
+
 
 const testDir = defineBddConfig({
   features: 'tests/e2e/features/**/*.feature',
@@ -17,7 +17,17 @@ export default defineConfig({
 
   reporter: [
     ['list'],
-    ['html', { open: 'never' }],
+
+    // Laporan HTML bawaan Playwright
+    ['html', {
+      open: 'never',
+      outputFolder: 'playwright-report',
+    }],
+
+    // Laporan HTML Cucumber
+    //cucumberReporter('html', {
+      //outputFile: 'bdd-reports/cucumber.html',
+    //}),
   ],
 
   use: {
@@ -29,7 +39,7 @@ export default defineConfig({
 
     // Perlambat gerakan agar mudah diamati
     launchOptions: {
-      slowMo: 500,
+      slowMo: 1200,
     },
 
     screenshot: 'only-on-failure',
