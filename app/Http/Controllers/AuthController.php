@@ -67,8 +67,12 @@ class AuthController extends Controller
         return match (Auth::user()->role) {
             'pelapor' => redirect()
                 ->route('pelapor.laporan.create'),
+
             'petugas_ec' => redirect()
                 ->route('petugas.ec.cases.index'),
+
+            'instansi' => redirect()
+                ->route('instansi.assignments.index'),
 
             default => abort(
                 403,

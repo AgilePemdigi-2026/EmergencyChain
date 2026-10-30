@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Assignment extends Model
 {
@@ -34,6 +35,15 @@ class Assignment extends Model
             EmergencyCase::class,
             'case_id',
             'case_id'
+        );
+    }
+
+    public function statusPenanganan(): HasMany
+    {
+        return $this->hasMany(
+            StatusPenanganan::class,
+            'assignment_id',
+            'assignment_id'
         );
     }
 }
