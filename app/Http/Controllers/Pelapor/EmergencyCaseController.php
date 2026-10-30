@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreEmergencyCaseRequest;
 use App\Models\EmergencyCase;
 use App\Models\Lokasi;
+use App\Services\Matching\ResourceMatchingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -23,13 +24,16 @@ class EmergencyCaseController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($data, $request) {
+
+            // 1. Simpan lokasi kejadian.
             $lokasi = Lokasi::create([
                 'latitude' => $data['latitude'],
                 'longitude' => $data['longitude'],
                 'alamat' => $data['alamat'],
             ]);
 
-            EmergencyCase::create([
+            // 2. Simpan Emergency Case.
+            $case = EmergencyCase::create([
                 'lokasi_id' => $lokasi->lokasi_id,
                 'pengguna_id' => $request->user()->getAuthIdentifier(),
                 'jenis_kejadian' => $data['jenis_kejadian'],
@@ -38,6 +42,9 @@ class EmergencyCaseController extends Controller
                 'waktu_laporan' => now(),
                 'status_laporan' => 'Menunggu',
             ]);
+
+            // 3. Jalankan Resource Matching otomatis.
+            app(ResourceMatchingService::class)->match($case);
         });
 
         return redirect()
