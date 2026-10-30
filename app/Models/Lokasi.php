@@ -21,4 +21,13 @@ class Lokasi extends Model
     {
         return $this->hasMany(EmergencyCase::class, 'lokasi_id', 'lokasi_id');
     }
+
+    public function resources(): HasMany
+    {
+        return $this->hasMany(
+            Resource::class,
+            'lokasi_id',
+            'lokasi_id'
+        );
+    }
 }
