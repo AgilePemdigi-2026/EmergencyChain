@@ -25,9 +25,9 @@ export default defineConfig({
     }],
 
     // Laporan HTML Cucumber
-    //cucumberReporter('html', {
-      //outputFile: 'bdd-reports/cucumber.html',
-    //}),
+    cucumberReporter('html', {
+      outputFile: 'bdd-reports/cucumber.html',
+    }),
   ],
 
   use: {
@@ -39,7 +39,7 @@ export default defineConfig({
 
     // Perlambat gerakan agar mudah diamati
     launchOptions: {
-      slowMo: 1200,
+      slowMo: 600,
     },
 
     screenshot: 'only-on-failure',
