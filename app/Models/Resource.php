@@ -14,6 +14,7 @@ class Resource extends Model
 
     protected $fillable = [
         'instansi_id',
+        'lokasi_id',
         'nama_resource',
         'jenis_resource',
         'lokasi',
@@ -35,6 +36,15 @@ class Resource extends Model
             Assignment::class,
             'resource_id',
             'resource_id'
+        );
+    }
+
+    public function lokasiPangkalan(): BelongsTo
+    {
+        return $this->belongsTo(
+            Lokasi::class,
+            'lokasi_id',
+            'lokasi_id'
         );
     }
 }

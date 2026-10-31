@@ -5,39 +5,49 @@
 
 @section('content')
 @php
-    // Data sementara untuk preview frontend
-    $assignments = [
-        [
-            'id' => 'ASG-001',
-            'case_id' => 'EC-2026-0009',
-            'jenis_kejadian' => 'Kebakaran Bangunan',
-            'lokasi' => 'Jl. Diponegoro, Surabaya',
-            'prioritas' => 'Tinggi',
-            'waktu' => 'Hari ini, 10:10',
-            'resource' => 'Unit Pemadam & Rescue',
-            'status' => 'Diterima',
-        ],
-    ];
+    // Data $assignments dikirim oleh AssignmentController.
+    $assignmentAktif = $assignments->getCollection()
+        ->whereNotIn('status_assign', ['selesai', 'ditolak', 'dibatalkan'])
+        ->count();
 
-    $assignmentAktif = count($assignments);
-    $menungguAssignment = 0;
-    $selesaiHariIni = 0;
+    $selesaiPadaHalamanIni = $assignments->getCollection()
+        ->where('status_assign', 'selesai')
+        ->count();
 @endphp
 
 <div class="space-y-7">
 
-    {{-- Judul dashboard --}}
+    {{-- Judul Dashboard --}}
     <div>
         <p class="text-xs font-bold uppercase tracking-[0.2em] text-blue-500">
-            Damkar Surabaya
+            {{ auth()->user()->instansi?->nama_instansi ?? 'Instansi Penanganan' }}
         </p>
 
         <h1 class="mt-2 text-3xl font-semibold text-slate-800">
             Dashboard Penanganan
         </h1>
+
+        <p class="mt-2 text-sm text-slate-500">
+            Daftar penugasan yang ditujukan kepada instansi Anda.
+        </p>
     </div>
 
-    {{-- Ringkasan --}}
+    {{-- Pesan dari backend --}}
+    @if (session('success'))
+        <div class="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            @foreach ($errors->all() as $error)
+                <p>{{ $error }}</p>
+            @endforeach
+        </div>
+    @endif
+
+    {{-- Ringkasan Dashboard --}}
     <div class="grid gap-4 md:grid-cols-3">
 
         <div class="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
@@ -48,40 +58,40 @@
                 {{ $assignmentAktif }}
             </p>
             <p class="mt-1 text-xs text-slate-400">
-                Sedang ditangani
+                Pada halaman ini
             </p>
         </div>
 
         <div class="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
             <p class="text-sm font-medium text-slate-500">
-                Menunggu Assignment
+                Total Assignment
             </p>
             <p class="mt-2 text-3xl font-bold text-slate-800">
-                {{ $menungguAssignment }}
+                {{ $assignments->total() }}
             </p>
             <p class="mt-1 text-xs text-slate-400">
-                Menunggu resource tersedia
+                Seluruh data instansi Anda
             </p>
         </div>
 
         <div class="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
             <p class="text-sm font-medium text-slate-500">
-                Selesai Hari Ini
+                Penanganan Selesai
             </p>
             <p class="mt-2 text-3xl font-bold text-slate-800">
-                {{ $selesaiHariIni }}
+                {{ $selesaiPadaHalamanIni }}
             </p>
             <p class="mt-1 text-xs text-slate-400">
-                Penanganan selesai
+                Pada halaman ini
             </p>
         </div>
 
     </div>
 
-    {{-- Area utama --}}
+    {{-- Area Utama --}}
     <div class="grid gap-5 xl:grid-cols-3">
 
-        {{-- Daftar assignment --}}
+        {{-- Daftar Assignment --}}
         <section class="rounded-2xl border border-rose-100 bg-white shadow-sm xl:col-span-2">
 
             <div class="border-b border-slate-100 px-5 py-4">
@@ -89,7 +99,7 @@
                     Assignment Membutuhkan Tindakan
                 </h2>
                 <p class="mt-1 text-xs text-slate-400">
-                    Penugasan aktif yang perlu ditangani
+                    Informasi penugasan dari sistem Resource Matching
                 </p>
             </div>
 
@@ -97,72 +107,98 @@
 
                 @forelse ($assignments as $assignment)
 
+                    @php
+                        $latestStatus = $assignment->statusPenanganan
+                            ->sortByDesc('waktu_update')
+                            ->first();
+
+                        $isSelesai = in_array(
+                            $assignment->status_assign,
+                            ['selesai', 'ditolak', 'dibatalkan'],
+                            true
+                        );
+                    @endphp
+
                     <article class="rounded-xl border border-slate-200 border-t-4 border-t-red-500 p-4">
 
                         <div class="flex items-center justify-between gap-2">
 
-                            <span class="rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
-                                {{ $assignment['prioritas'] }}
+                            <span class="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-red-600">
+                                Assignment #{{ $assignment->assignment_id }}
                             </span>
 
                             <span class="text-xs text-slate-400">
-                                {{ $assignment['waktu'] }}
+                                {{ $assignment->waktu_assign }}
                             </span>
 
                         </div>
 
                         <h3 class="mt-3 text-lg font-bold text-slate-800">
-                            {{ $assignment['case_id'] }}
+                            Emergency Case #{{ $assignment->case_id }}
                         </h3>
 
                         <p class="mt-2 text-sm font-medium text-slate-700">
-                            {{ $assignment['jenis_kejadian'] }}
+                            {{ $assignment->emergencyCase?->jenis_kejadian ?? 'Jenis kejadian tidak tersedia' }}
                         </p>
 
                         <p class="mt-1 text-sm text-slate-500">
-                            {{ $assignment['lokasi'] }}
+                            {{ $assignment->emergencyCase?->lokasi?->alamat ?? 'Lokasi belum tersedia' }}
                         </p>
 
                         <div class="mt-4">
                             <p class="text-xs text-slate-400">
-                                Respons Dibutuhkan
+                                Resource Ditugaskan
                             </p>
-
                             <p class="mt-1 text-sm font-semibold text-slate-700">
-                                {{ $assignment['resource'] }}
+                                {{ $assignment->resource?->nama_resource ?? 'Resource tidak tersedia' }}
                             </p>
                         </div>
 
                         <div class="mt-4">
-                            <p class="text-xs text-slate-400">Status</p>
-
-                            <span class="mt-1 inline-block rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                                {{ $assignment['status'] }}
+                            <p class="text-xs text-slate-400">
+                                Status Assignment
+                            </p>
+                            <span class="mt-1 inline-block rounded-full px-3 py-1 text-xs font-semibold
+                                {{ $isSelesai
+                                    ? 'bg-slate-100 text-slate-600'
+                                    : 'bg-emerald-50 text-emerald-700' }}">
+                                {{ ucwords(str_replace('_', ' ', $assignment->status_assign)) }}
                             </span>
                         </div>
 
-                        <a
-                            href="{{ route('preview.instansi.assignments.show') }}"
-                            class="mt-5 block rounded-lg border border-red-400 px-4 py-3 text-center text-sm font-semibold text-red-500 transition hover:bg-red-50"
-                        >
-                            Buka Penanganan
-                        </a>
+                        <div class="mt-3">
+                            <p class="text-xs text-slate-400">
+                                Status Penanganan
+                            </p>
+                            <p class="mt-1 text-sm font-medium text-slate-700">
+                                {{ $latestStatus
+                                    ? ucwords(str_replace('_', ' ', $latestStatus->status))
+                                    : 'Belum ada pembaruan' }}
+                            </p>
+                        </div>
+
+                        {{-- Route detail resmi belum tersedia --}}
+                        <div class="mt-5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm font-medium text-slate-500">
+                            Detail Penanganan — segera tersedia
+                        </div>
 
                     </article>
 
                 @empty
-
                     <p class="col-span-full py-10 text-center text-sm text-slate-500">
-                        Belum ada assignment aktif.
+                        Belum ada Assignment untuk instansi Anda.
                     </p>
-
                 @endforelse
 
             </div>
 
+            <div class="px-5 pb-5">
+                {{ $assignments->links() }}
+            </div>
+
         </section>
 
-        {{-- Peta mock --}}
+        {{-- Peta sementara --}}
         <section class="overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm">
 
             <div class="border-b border-slate-100 px-5 py-4">
@@ -170,41 +206,35 @@
                     Peta Penugasan
                 </h2>
                 <p class="mt-1 text-xs text-slate-400">
-                    Area operasional aktif
+                    Area operasional instansi
                 </p>
             </div>
 
             <div class="relative flex h-64 items-center justify-center overflow-hidden bg-slate-100">
 
-                {{-- Ilustrasi peta sementara --}}
-                <div class="absolute inset-0 opacity-60"
-                     style="background-image: linear-gradient(35deg, transparent 45%, white 46%, white 52%, transparent 53%), linear-gradient(125deg, transparent 45%, white 46%, white 52%, transparent 53%); background-size: 130px 130px;">
-                </div>
+                <div
+                    class="absolute inset-0 opacity-60"
+                    style="background-image: linear-gradient(35deg, transparent 45%, white 46%, white 52%, transparent 53%), linear-gradient(125deg, transparent 45%, white 46%, white 52%, transparent 53%); background-size: 130px 130px;"
+                ></div>
 
-                <div class="relative z-10 rounded-xl border border-red-100 bg-white px-4 py-3 text-center shadow-md">
-                    <div class="text-2xl">📍</div>
+                <div class="relative z-10 rounded-xl bg-white px-4 py-3 text-center shadow-md">
+                    <p class="text-2xl">📍</p>
                     <p class="mt-1 text-xs font-semibold text-slate-700">
-                        Lokasi Kejadian
+                        Peta Penugasan
                     </p>
-                    <p class="mt-1 text-xs text-slate-500">
-                        Jl. Diponegoro
+                    <p class="text-xs text-slate-500">
+                        Integrasi peta menyusul
                     </p>
                 </div>
 
             </div>
 
-            <div class="flex flex-wrap gap-4 px-5 py-4 text-xs text-slate-500">
-                <span>🟢 4 unit tersedia</span>
-                <span>🟠 3 unit bertugas</span>
-            </div>
-
-            <p class="px-5 pb-4 text-xs text-slate-400">
-                Ilustrasi peta dan jumlah unit masih data mock.
+            <p class="px-5 py-4 text-xs text-slate-400">
+                Peta masih ilustrasi. Lokasi kejadian di kartu sudah berasal dari database.
             </p>
 
         </section>
 
     </div>
-
 </div>
 @endsection

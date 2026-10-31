@@ -12,6 +12,7 @@ class StatusPenanganan extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'assignment_id',
         'case_id',
         'status',
         'waktu_update',
@@ -24,6 +25,15 @@ class StatusPenanganan extends Model
             EmergencyCase::class,
             'case_id',
             'case_id'
+        );
+    }
+
+    public function assignment(): BelongsTo
+    {
+        return $this->belongsTo(
+            Assignment::class,
+            'assignment_id',
+            'assignment_id'
         );
     }
 }
