@@ -178,9 +178,11 @@
                         </div>
 
                         {{-- Route detail resmi belum tersedia --}}
-                        <div class="mt-5 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-center text-sm font-medium text-slate-500">
-                            Detail Penanganan — segera tersedia
-                        </div>
+                        <a href="{{ route('instansi.assignments.show', $assignment->assignment_id) }}"
+                        class="mt-5 block rounded-lg border border-red-400 px-4 py-3 text-center text-sm font-semibold text-red-500 transition hover:bg-red-50">
+                        Buka Penanganan
+                    </a>
+
 
                     </article>
 

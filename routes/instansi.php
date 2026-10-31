@@ -13,6 +13,12 @@ Route::middleware(['auth', 'role:instansi'])
             [AssignmentController::class, 'index']
         )->name('assignments.index');
 
+        Route::get(
+            '/assignments/{assignmentId}',
+            [AssignmentController::class, 'show'])
+            ->whereNumber('assignmentId')
+            ->name('assignments.show');
+
         Route::patch(
             '/assignments/{assignmentId}/status',
             [AssignmentController::class, 'updateStatus']

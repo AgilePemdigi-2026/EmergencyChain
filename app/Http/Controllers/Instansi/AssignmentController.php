@@ -37,6 +37,30 @@ class AssignmentController extends Controller
             compact('assignments')
         );
     }
+/**
+ * Menampilkan detail Assignment milik Instansi login.
+ */
+public function show(Request $request, int $assignmentId): View
+{
+    $user = $request->user();
+
+    $assignment = Assignment::query()
+        ->with([
+            'resource.lokasiPangkalan',
+            'emergencyCase.lokasi',
+            'statusPenanganan',
+        ])
+        ->where('assignment_id', $assignmentId)
+        ->whereHas('resource', function ($query) use ($user) {
+            $query->where('instansi_id', $user->instansi_id);
+        })
+        ->firstOrFail();
+
+    return view(
+        'instansi.assignments.show',
+        compact('assignment')
+    );
+}
 
     /**
      * Memperbarui status penanganan Assignment.

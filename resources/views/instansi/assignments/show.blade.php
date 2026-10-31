@@ -4,29 +4,51 @@
 @section('title', 'Detail Penanganan - EmergencyChain')
 
 @section('content')
+
 @php
-    // Data mock sementara, nanti diganti data dari backend.
+    // Data Assignment dikirim dari AssignmentController@show.
+    $emergencyCase = $assignment->emergencyCase;
+    $resource = $assignment->resource;
+
+    $latestStatus = $assignment->statusPenanganan
+        ->sortByDesc('waktu_update')
+        ->first();
+
     $case = [
-        'id' => 'EC-2026-0009',
-        'judul' => 'Penanganan Kebakaran Bangunan',
-        'jenis' => 'Kebakaran Bangunan',
-        'lokasi' => 'Jl. Diponegoro, Surabaya',
-        'prioritas' => 'Tinggi',
-        'resource' => 'Damkar Unit 01',
-        'personel' => 6,
+        'id' => $assignment->case_id,
+        'judul' => 'Penanganan ' . ($emergencyCase?->jenis_kejadian ?? 'Emergency'),
+        'jenis' => $emergencyCase?->jenis_kejadian ?? 'Tidak tersedia',
+        'lokasi' => $emergencyCase?->lokasi?->alamat ?? 'Lokasi tidak tersedia',
+        'prioritas' => 'Belum tersedia',
+        'resource' => $resource?->nama_resource ?? 'Tidak tersedia',
+        'personel' => null,
         'jumlah_unit' => 1,
-        'status' => 'Diterima',
-        'deskripsi' => 'Kebakaran di lantai dua bangunan ruko. Asap tebal terlihat, penghuni sudah dievakuasi.',
+        'status' => $latestStatus?->status ?? 'diterima',
+        'deskripsi' => $emergencyCase?->kondisi ?? 'Belum ada deskripsi kejadian.',
     ];
 
+    // Sesuai status yang saat ini didukung backend.
     $tahapan = [
         'Assignment Diterima',
         'Menuju Lokasi',
-        'Tiba di Lokasi',
         'Dalam Penanganan',
         'Penanganan Selesai',
     ];
+
+    $statusSaatIni = $assignment->status_assign === 'selesai'
+    ? 'selesai'
+    : ($latestStatus?->status ?? 'diterima');
+
+$urutanStatus = [
+    'diterima' => 0,
+    'menuju_lokasi' => 1,
+    'dalam_penanganan' => 2,
+    'selesai' => 3,
+];
+
+$tahapAktif = $urutanStatus[$statusSaatIni] ?? 0;
 @endphp
+
 
 <div class="space-y-7">
 
@@ -66,27 +88,36 @@
                 <div class="overflow-x-auto p-5">
                     <div class="flex min-w-[570px] items-start justify-between gap-2">
                         @foreach ($tahapan as $index => $tahap)
-                            <div class="flex flex-1 flex-col items-center text-center">
-                                <div
-                                    class="flex h-9 w-9 items-center justify-center rounded-full border-2 text-sm font-bold
-                                    {{ $index === 0
-                                        ? 'border-green-500 bg-green-500 text-white'
-                                        : ($index === 1
-                                            ? 'border-red-500 bg-white text-red-500'
-                                            : 'border-slate-200 bg-white text-slate-400') }}"
-                                >
-                                    {{ $index === 0 ? '✓' : $index + 1 }}
-                                </div>
+                        <div class="flex flex-1 flex-col items-center text-center">
+        {{-- Lingkaran progres --}}
+        <div
+            class="flex h-9 w-9 items-center justify-center rounded-full border-2 text-sm font-bold
+            {{ $index < $tahapAktif
+                ? 'border-green-500 bg-green-500 text-white'
+                : ($index === $tahapAktif
+                    ? 'border-red-500 bg-red-500 text-white'
+                    : 'border-slate-200 bg-white text-slate-400') }}"
+        >
+            {{ $index < $tahapAktif ? '✓' : $index + 1 }}
+        </div>
 
-                                <p class="mt-3 text-xs font-semibold text-slate-700">
-                                    {{ $tahap }}
-                                </p>
+        {{-- Nama tahapan --}}
+        <p class="mt-3 text-xs font-semibold text-slate-700">
+            {{ $tahap }}
+        </p>
 
-                                <p class="mt-1 text-xs text-slate-400">
-                                    {{ $index === 0 ? '10.10 WIB' : ($index === 1 ? 'Tahap berikutnya' : 'Menunggu') }}
-                                </p>
-                            </div>
-                        @endforeach
+        {{-- Keterangan tahapan --}}
+        <p class="mt-1 text-xs text-slate-400">
+            {{ $index < $tahapAktif
+                ? 'Terlewati'
+                : ($index === $tahapAktif
+                    ? 'Status saat ini'
+                    : 'Menunggu') }}
+        </p>
+
+    </div>
+@endforeach
+
                     </div>
                 </div>
             </section>
@@ -129,7 +160,9 @@
                                 {{ $case['resource'] }}
                             </p>
                             <p class="text-xs text-slate-500">
+                                @if ($case['personel'] !== null)
                                 {{ $case['personel'] }} personel
+                                @endif
                             </p>
                         </div>
                     </div>
@@ -213,56 +246,77 @@
             <section class="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
                 <h2 class="font-semibold text-slate-800">
                     Perbarui Status Penanganan
+                    @if ($errors->any())
+    <div class="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        @foreach ($errors->all() as $error)
+            <p>{{ $error }}</p>
+        @endforeach
+    </div>
+@endif
                 </h2>
+@if ($assignment->status_assign !== 'selesai')
+    <form
+        method="POST"
+        action="{{ route('instansi.assignments.status.update', $assignment->assignment_id) }}"
+        class="mt-5 space-y-4"
+    >
+        @csrf
+        @method('PATCH')
 
-                <div class="mt-5 space-y-4">
-                    <div>
-                        <label
-                            for="status_berikutnya"
-                            class="block text-sm font-semibold text-slate-700"
-                        >
-                            Status berikutnya
-                        </label>
+        <div>
+            <label for="status_berikutnya"
+                   class="block text-sm font-semibold text-slate-700">
+                Status Berikutnya
+            </label>
 
-                        <select
-                            id="status_berikutnya"
-                            class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700"
-                        >
-                            <option value="Menuju Lokasi">Menuju Lokasi</option>
-                            <option value="Tiba di Lokasi">Tiba di Lokasi</option>
-                            <option value="Dalam Penanganan">Dalam Penanganan</option>
-                            <option value="Selesai">Selesai</option>
-                        </select>
-                    </div>
+            <select
+                id="status_berikutnya"
+                name="status"
+                required
+                class="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-700"
+            >
+                <option value="menuju_lokasi">
+                    Menuju Lokasi
+                </option>
+                <option value="dalam_penanganan">
+                    Dalam Penanganan
+                </option>
+                <option value="selesai">
+                    Selesai
+                </option>
+            </select>
+        </div>
 
-                    <div>
-                        <label
-                            for="catatan_lapangan"
-                            class="block text-sm font-semibold text-slate-700"
-                        >
-                            Catatan Lapangan
-                        </label>
+        <div>
+            <label for="catatan_lapangan"
+                   class="block text-sm font-semibold text-slate-700">
+                Catatan Lapangan
+            </label>
 
-                        <textarea
-                            id="catatan_lapangan"
-                            rows="4"
-                            placeholder="Tambahkan catatan kondisi terbaru..."
-                            class="mt-2 w-full resize-none rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-700"
-                        ></textarea>
-                    </div>
+            <textarea
+                id="catatan_lapangan"
+                name="keterangan"
+                rows="4"
+                maxlength="5000"
+                required
+                placeholder="Tambahkan catatan kondisi terbaru..."
+                class="mt-2 w-full resize-none rounded-lg border border-slate-200 px-3 py-3 text-sm text-slate-700"
+            >{{ old('keterangan') }}</textarea>
+        </div>
 
-                    <button
-                        type="button"
-                        id="perbarui-status"
-                        class="w-full rounded-lg bg-red-500 px-4 py-3 font-semibold text-white hover:bg-red-600"
-                    >
-                        Perbarui Status
-                    </button>
+        <button
+            type="submit"
+            class="w-full rounded-lg bg-red-500 px-4 py-3 font-semibold text-white hover:bg-red-600"
+        >
+            Perbarui Status
+        </button>
+    </form>
+@else
+    <p class="mt-5 rounded-lg bg-green-50 p-4 text-sm font-semibold text-green-700">
+        Penanganan telah selesai.
+    </p>
+@endif
 
-                    <p id="pesan-status" role="status" class="text-xs text-slate-500">
-                        Simulasi frontend — status belum disimpan.
-                    </p>
-                </div>
             </section>
         </div>
 
@@ -290,7 +344,6 @@ document.addEventListener('DOMContentLoaded', function () {
         pesanJumlah.className = 'mt-2 text-xs text-green-600';
     });
 
-    const tombolStatus = document.getElementById('perbarui-status');
     const pilihanStatus = document.getElementById('status_berikutnya');
     const catatan = document.getElementById('catatan_lapangan');
     const pesanStatus = document.getElementById('pesan-status');
