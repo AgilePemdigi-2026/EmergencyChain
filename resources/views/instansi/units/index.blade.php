@@ -121,7 +121,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-xs font-semibold uppercase text-amber-600">
-                        Sedang Bertugas
+                        Sedang Ditugaskan
                     </p>
 
                     <p class="mt-1 text-3xl font-semibold text-slate-900">
@@ -250,7 +250,9 @@
                 <tbody class="divide-y divide-slate-100">
 
                     @forelse($resources as $resource)
-
+                        @php
+                            $isAssigned = $resource->status_ketersediaan === \App\Models\Resource::STATUS_DITUGASKAN;
+                        @endphp
                         <tr class="transition hover:bg-slate-50/60">
 
                             {{-- Unit --}}
@@ -357,31 +359,61 @@
 
                                 <div class="flex items-center gap-2">
 
-                                    <button
-                                        type="button"
-                                        data-edit-unit
-                                        data-id="{{ $resource->resource_id }}"
-                                        data-name="{{ $resource->nama_resource }}"
-                                        data-type="{{ $resource->jenis_resource }}"
-                                        data-capacity="{{ $resource->kapasitas_personel }}"
-                                        class="rounded-lg border border-slate-200 px-3 py-2 text-xs
-                                               font-semibold text-blue-600 transition
-                                               hover:bg-blue-50"
-                                    >
-                                        ✎ Edit
-                                    </button>
+                                    @if($isAssigned)
 
-                                    <button
-                                        type="button"
-                                        data-delete-unit
-                                        data-id="{{ $resource->resource_id }}"
-                                        data-name="{{ $resource->nama_resource }}"
-                                        class="rounded-lg border border-slate-200 px-3 py-2 text-xs
-                                               font-semibold text-red-500 transition
-                                               hover:bg-red-50"
-                                    >
-                                        🗑 Hapus
-                                    </button>
+                                        {{-- Edit disabled saat unit sedang ditugaskan --}}
+                                        <button
+                                            type="button"
+                                            disabled
+                                            title="Unit sedang dalam penanganan"
+                                            class="cursor-not-allowed rounded-lg border border-slate-200
+                                                   bg-slate-50 px-3 py-2 text-xs font-semibold
+                                                   text-slate-400 opacity-50"
+                                        >
+                                            ✎ Edit
+                                        </button>
+
+                                        {{-- Hapus disabled saat unit sedang ditugaskan --}}
+                                        <button
+                                            type="button"
+                                            disabled
+                                            title="Unit sedang dalam penanganan"
+                                            class="cursor-not-allowed rounded-lg border border-slate-200
+                                                   bg-slate-50 px-3 py-2 text-xs font-semibold
+                                                   text-slate-400 opacity-50"
+                                        >
+                                            🗑 Hapus
+                                        </button>
+
+                                    @else
+
+                                        <button
+                                            type="button"
+                                            data-edit-unit
+                                            data-id="{{ $resource->resource_id }}"
+                                            data-name="{{ $resource->nama_resource }}"
+                                            data-type="{{ $resource->jenis_resource }}"
+                                            data-capacity="{{ $resource->kapasitas_personel }}"
+                                            class="rounded-lg border border-slate-200 px-3 py-2 text-xs
+                                                   font-semibold text-blue-600 transition
+                                                   hover:bg-blue-50"
+                                        >
+                                            ✎ Edit
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            data-delete-unit
+                                            data-id="{{ $resource->resource_id }}"
+                                            data-name="{{ $resource->nama_resource }}"
+                                            class="rounded-lg border border-slate-200 px-3 py-2 text-xs
+                                                   font-semibold text-red-500 transition
+                                                   hover:bg-red-50"
+                                        >
+                                            🗑 Hapus
+                                        </button>
+
+                                    @endif
 
                                 </div>
 
@@ -420,10 +452,6 @@
     </div>
 </div>
 
-
-{{-- ========================================================= --}}
-{{-- CREATE MODAL --}}
-{{-- ========================================================= --}}
 
 <div
     id="create-unit-modal"
@@ -555,10 +583,6 @@
     </div>
 </div>
 
-
-{{-- ========================================================= --}}
-{{-- EDIT MODAL --}}
-{{-- ========================================================= --}}
 
 <div
     id="edit-unit-modal"
