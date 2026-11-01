@@ -344,40 +344,172 @@
         {{-- Kolom Kanan --}}
         <aside class="space-y-4">
 
-            {{-- Pengelolaan Emergency Case --}}
+            {{-- Aksi Penanganan --}}
             <section class="rounded-xl border border-slate-100
                             bg-white p-5 shadow-sm">
 
                 <h2 class="text-sm font-semibold text-slate-700">
-                    Kelola Emergency Case
+                    Aksi Penanganan
                 </h2>
 
-                <p class="mt-2 text-xs leading-relaxed text-slate-500">
-                    Petugas EC dapat memeriksa dan mengoreksi
-                    Kondisi Kejadian serta Kebutuhan Penanganan
-                    melalui tombol Edit Informasi.
-                </p>
+                {{-- Resource Matching --}}
+                <a
+                    href="{{ route('petugas.ec.cases.resource-matching', [
+                        'caseId' => $case->case_id
+                    ]) }}"
+                    class="mt-4 flex w-full items-center justify-center
+                        rounded-lg bg-red-500 px-4 py-3
+                        text-sm font-semibold text-white
+                        transition hover:bg-red-600"
+                >
+                    Resource Matching
+                </a>
+
+                {{-- Hospital Matching --}}
+                <a
+                    href="{{ route('petugas.ec.cases.hospital-matching', [
+                        'caseId' => $case->case_id
+                    ]) }}"
+                    class="mt-2 flex w-full items-center justify-center
+                        rounded-lg border border-red-200 bg-white
+                        px-4 py-3 text-sm font-semibold text-red-500
+                        transition hover:bg-red-50"
+                >
+                    Hospital Matching
+                </a>
+
             </section>
 
-            {{-- Resource --}}
+
+            {{-- Resource Ditugaskan --}}
             <section class="rounded-xl border border-slate-100
                             bg-white p-5 shadow-sm">
 
-                <h2 class="text-sm font-semibold text-slate-700">
-                    Resource Ditugaskan
-                </h2>
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-slate-700">
+                        Resource Ditugaskan
+                    </h2>
 
-                <p class="mt-3 text-sm font-medium text-slate-500">
-                    Belum ditugaskan
-                </p>
+                    <span class="rounded-full bg-rose-50 px-2 py-1
+                                text-xs font-semibold text-rose-500">
+                        {{ $case->assignments->count() }} Unit
+                    </span>
+                </div>
 
-                <p class="mt-2 text-xs text-slate-400">
-                    Informasi resource akan tersedia setelah
-                    proses Assignment diintegrasikan.
-                </p>
+                @forelse ($case->assignments as $assignment)
+
+                    @php
+                        $assignmentStatus = strtolower(
+                            $assignment->status_assign ?? ''
+                        );
+
+                        $assignmentStatusStyle = match ($assignmentStatus) {
+                            'diterima' => 'bg-emerald-100 text-emerald-700',
+                            'menunggu' => 'bg-amber-100 text-amber-700',
+                            'ditolak' => 'bg-red-100 text-red-600',
+                            'selesai' => 'bg-slate-100 text-slate-600',
+                            default => 'bg-slate-100 text-slate-600',
+                        };
+                    @endphp
+
+                    <div class="flex items-start gap-3
+                                {{ !$loop->first ? 'mt-4 border-t border-slate-100 pt-4' : '' }}">
+
+                        {{-- Ikon Resource --}}
+                        <div class="flex h-10 w-10 shrink-0 items-center
+                                    justify-center rounded-lg bg-rose-100
+                                    text-lg font-bold text-red-500">
+                            +
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+
+                            <p class="text-sm font-semibold text-slate-700">
+                                {{ $assignment->resource?->nama_resource
+                                    ?? 'Resource tidak tersedia' }}
+                            </p>
+
+                            <p class="mt-1 text-xs text-slate-400">
+                                {{ $assignment->resource?->jenis_resource
+                                    ?? 'Jenis resource tidak tersedia' }}
+                            </p>
+
+                            <span class="mt-2 inline-flex rounded-full
+                                        px-2 py-1 text-[10px] font-semibold
+                                        {{ $assignmentStatusStyle }}">
+                                {{ ucfirst(str_replace(
+                                    '_',
+                                    ' ',
+                                    $assignment->status_assign ?? 'Tidak diketahui'
+                                )) }}
+                            </span>
+
+                        </div>
+                    </div>
+
+                @empty
+
+                    <div class="rounded-lg bg-amber-50 p-4">
+
+                        @if ($case->status_laporan === 'Menunggu Assignment')
+
+                            <p class="text-sm font-semibold text-amber-700">
+                                Menunggu Resource
+                            </p>
+
+                            <p class="mt-2 text-xs leading-relaxed text-amber-600">
+                                Belum tersedia resource yang sesuai untuk
+                                kebutuhan kasus ini. Sistem akan mencoba
+                                pencocokan kembali ketika resource tersedia.
+                            </p>
+
+                        @elseif ($case->status_laporan === 'Perlu Verifikasi')
+
+                            <p class="text-sm font-semibold text-amber-700">
+                                Menunggu Verifikasi
+                            </p>
+
+                            <p class="mt-2 text-xs leading-relaxed text-amber-600">
+                                Jenis kejadian belum memiliki pemetaan
+                                kebutuhan resource sehingga memerlukan
+                                verifikasi lebih lanjut.
+                            </p>
+
+                        @else
+
+                            <p class="text-sm font-semibold text-amber-700">
+                                Belum Ada Resource
+                            </p>
+
+                            <p class="mt-2 text-xs leading-relaxed text-amber-600">
+                                Belum terdapat resource yang ditugaskan
+                                untuk Emergency Case ini.
+                            </p>
+
+                        @endif
+
+                    </div>
+
+                @endforelse
+
+                {{-- Informasi jika matching baru berhasil sebagian --}}
+                @if (
+                    $case->assignments->isNotEmpty() &&
+                    $case->status_laporan === 'Menunggu Assignment'
+                )
+                    <div class="mt-4 rounded-lg bg-amber-50 p-3">
+                        <p class="text-xs leading-relaxed text-amber-700">
+                            Sebagian kebutuhan resource masih menunggu
+                            ketersediaan. Sistem akan melakukan pencocokan
+                            kembali ketika resource tersedia.
+                        </p>
+                    </div>
+                @endif
+
             </section>
 
-            {{-- Rumah Sakit --}}
+
+            {{-- Rumah Sakit Tujuan --}}
             <section class="rounded-xl border border-slate-100
                             bg-white p-5 shadow-sm">
 
@@ -389,12 +521,15 @@
                     Belum ditentukan
                 </p>
 
-                <p class="mt-2 text-xs text-slate-400">
-                    Informasi rumah sakit akan tersedia
-                    setelah Hospital Matching diintegrasikan.
+                <p class="mt-2 text-xs leading-relaxed text-slate-400">
+                    Informasi rumah sakit akan tersedia setelah
+                    proses Hospital Matching diintegrasikan.
                 </p>
+
             </section>
+
         </aside>
+
 
     </div>
 </div>
