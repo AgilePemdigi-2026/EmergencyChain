@@ -1,0 +1,286 @@
+<?php
+
+namespace App\Http\Controllers\Instansi;
+
+use App\Http\Controllers\Controller;
+use App\Models\Resource;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\View\View;
+
+class ResourceController extends Controller
+{
+
+    public function index(Request $request): View
+    {
+        $user = $request->user();
+
+        $baseQuery = Resource::query()
+            ->where('instansi_id', $user->instansi_id);
+
+        $summary = [
+            'total' => (clone $baseQuery)->count(),
+
+            'tersedia' => (clone $baseQuery)
+                ->where(
+                    'status_ketersediaan',
+                    Resource::STATUS_TERSEDIA
+                )
+                ->count(),
+
+            'ditugaskan' => (clone $baseQuery)
+                ->where(
+                    'status_ketersediaan',
+                    Resource::STATUS_DITUGASKAN
+                )
+                ->count(),
+
+            'tidak_tersedia' => (clone $baseQuery)
+                ->where(
+                    'status_ketersediaan',
+                    Resource::STATUS_TIDAK_TERSEDIA
+                )
+                ->count(),
+        ];
+
+        $query = clone $baseQuery;
+
+        if ($request->filled('search')) {
+            $search = trim($request->string('search')->toString());
+
+            $query->where(function ($builder) use ($search) {
+                $builder
+                    ->where('nama_resource', 'ilike', "%{$search}%")
+                    ->orWhere('lokasi', 'ilike', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('jenis')) {
+            $query->where(
+                'jenis_resource',
+                $request->string('jenis')->toString()
+            );
+        }
+
+        if ($request->filled('status')) {
+            $query->where(
+                'status_ketersediaan',
+                $request->string('status')->toString()
+            );
+        }
+
+        $resources = $query
+            ->orderBy('nama_resource')
+            ->paginate(10)
+            ->withQueryString();
+
+        $jenisOptions = (clone $baseQuery)
+            ->select('jenis_resource')
+            ->whereNotNull('jenis_resource')
+            ->distinct()
+            ->orderBy('jenis_resource')
+            ->pluck('jenis_resource');
+
+        return view('instansi.units.index', [
+            'resources' => $resources,
+            'summary' => $summary,
+            'jenisOptions' => $jenisOptions,
+            'statusOptions' => Resource::statusOptions(),
+        ]);
+    }
+
+
+public function store(Request $request): RedirectResponse
+{
+    $validated = $request->validate([
+        'nama_resource' => [
+            'required',
+            'string',
+            'max:100',
+        ],
+
+        'jenis_resource' => [
+            'required',
+            'string',
+            'max:50',
+        ],
+
+        'kapasitas_personel' => [
+            'required',
+            'integer',
+            'min:1',
+            'max:999',
+        ],
+
+        'status_ketersediaan' => [
+            'required',
+            Rule::in([
+                Resource::STATUS_TERSEDIA,
+                Resource::STATUS_TIDAK_TERSEDIA,
+            ]),
+        ],
+    ]);
+
+    $user = $request->user();
+
+    $resourcePangkalan = Resource::query()
+        ->where('instansi_id', $user->instansi_id)
+        ->whereNotNull('lokasi_id')
+        ->with('lokasiPangkalan')
+        ->first();
+
+    if (!$resourcePangkalan || !$resourcePangkalan->lokasiPangkalan) {
+        return back()
+            ->withInput()
+            ->with(
+                'error',
+                'Lokasi pangkalan Instansi belum tersedia. Unit belum dapat ditambahkan.'
+            );
+    }
+
+    Resource::create([
+        'instansi_id' => $user->instansi_id,
+
+        'lokasi_id' =>
+            $resourcePangkalan->lokasi_id,
+
+        'nama_resource' =>
+            $validated['nama_resource'],
+
+        'jenis_resource' =>
+            $validated['jenis_resource'],
+
+        'kapasitas_personel' =>
+            $validated['kapasitas_personel'],
+
+        'lokasi' =>
+            $resourcePangkalan->lokasiPangkalan->alamat,
+
+        'status_ketersediaan' =>
+            $validated['status_ketersediaan'],
+    ]);
+
+    return redirect()
+        ->route('instansi.units.index')
+        ->with(
+            'success',
+            'Unit berhasil ditambahkan.'
+        );
+}
+    public function update(
+        Request $request,
+        int $resourceId
+    ): RedirectResponse {
+        $resource = $this->ownedResource(
+            $request,
+            $resourceId
+        );
+
+        $validated = $request->validate([
+            'nama_resource' => [
+                'required',
+                'string',
+                'max:100',
+            ],
+
+            'jenis_resource' => [
+                'required',
+                'string',
+                'max:50',
+            ],
+
+            'kapasitas_personel' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:999',
+            ],
+        ]);
+
+        $resource->update($validated);
+
+        return redirect()
+            ->route('instansi.units.index')
+            ->with(
+                'success',
+                'Data unit berhasil diperbarui.'
+            );
+    }
+
+    public function updateAvailability(
+        Request $request,
+        int $resourceId
+    ): RedirectResponse {
+        $resource = $this->ownedResource(
+            $request,
+            $resourceId
+        );
+
+ 
+        if (
+            $resource->status_ketersediaan
+            === Resource::STATUS_DITUGASKAN
+        ) {
+            return back()->with(
+                'error',
+                'Unit yang sedang ditugaskan tidak dapat diubah ketersediaannya secara manual.'
+            );
+        }
+
+        $validated = $request->validate([
+            'status_ketersediaan' => [
+                'required',
+                Rule::in([
+                    Resource::STATUS_TERSEDIA,
+                    Resource::STATUS_TIDAK_TERSEDIA,
+                ]),
+            ],
+        ]);
+
+        $resource->update([
+            'status_ketersediaan' =>
+                $validated['status_ketersediaan'],
+        ]);
+
+        return back()->with(
+            'success',
+            'Ketersediaan unit berhasil diperbarui.'
+        );
+    }
+    public function destroy(
+        Request $request,
+        int $resourceId
+    ): RedirectResponse {
+        $resource = $this->ownedResource(
+            $request,
+            $resourceId
+        );
+
+        if ($resource->assignments()->exists()) {
+            return back()->with(
+                'error',
+                'Unit tidak dapat dihapus karena sudah memiliki riwayat Assignment.'
+            );
+        }
+
+        $resource->delete();
+
+        return redirect()
+            ->route('instansi.units.index')
+            ->with('success', 'Unit berhasil dihapus.');
+    }
+
+    private function ownedResource(
+        Request $request,
+        int $resourceId
+    ): Resource {
+        return Resource::query()
+            ->where(
+                'instansi_id',
+                $request->user()->instansi_id
+            )
+            ->where('resource_id', $resourceId)
+            ->firstOrFail();
+    }
+}
