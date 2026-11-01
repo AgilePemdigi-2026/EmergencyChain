@@ -168,44 +168,31 @@ public function store(Request $request): RedirectResponse
             'Unit berhasil ditambahkan.'
         );
 }
-    public function update(
-        Request $request,
-        int $resourceId
-    ): RedirectResponse {
-        $resource = $this->ownedResource(
-            $request,
-            $resourceId
-        );
+    public function update(Request $request, int $resourceId)
+    {
+        $resource = $this->ownedResource($request, $resourceId);
+
+        // Unit yang sedang mendapat assignment tidak boleh diedit.
+        if ($resource->status_ketersediaan === Resource::STATUS_DITUGASKAN) {
+            return back()->with(
+                'error',
+                'Unit sedang dalam penanganan dan tidak dapat diedit.'
+            );
+        }
 
         $validated = $request->validate([
-            'nama_resource' => [
-                'required',
-                'string',
-                'max:100',
-            ],
-
-            'jenis_resource' => [
-                'required',
-                'string',
-                'max:50',
-            ],
-
-            'kapasitas_personel' => [
-                'required',
-                'integer',
-                'min:1',
-                'max:999',
-            ],
+            'nama_resource' => ['required', 'string', 'max:100'],
+            'jenis_resource' => ['required', 'string', 'max:50'],
+            'kapasitas_personel' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $resource->update($validated);
+        $resource->update([
+            'nama_resource' => $validated['nama_resource'],
+            'jenis_resource' => $validated['jenis_resource'],
+            'kapasitas_personel' => $validated['kapasitas_personel'] ?? null,
+        ]);
 
-        return redirect()
-            ->route('instansi.units.index')
-            ->with(
-                'success',
-                'Data unit berhasil diperbarui.'
-            );
+        return back()->with('success', 'Unit berhasil diperbarui.');
     }
 
     public function updateAvailability(
@@ -248,27 +235,29 @@ public function store(Request $request): RedirectResponse
             'Ketersediaan unit berhasil diperbarui.'
         );
     }
-    public function destroy(
-        Request $request,
-        int $resourceId
-    ): RedirectResponse {
-        $resource = $this->ownedResource(
-            $request,
-            $resourceId
-        );
+        public function destroy(Request $request, int $resourceId)
+    {
+        $resource = $this->ownedResource($request, $resourceId);
 
+        // Unit yang sedang mendapat assignment tidak boleh dihapus.
+        if ($resource->status_ketersediaan === Resource::STATUS_DITUGASKAN) {
+            return back()->with(
+                'error',
+                'Unit sedang dalam penanganan dan tidak dapat dihapus.'
+            );
+        }
+
+        // Jangan hapus resource yang sudah mempunyai riwayat Assignment.
         if ($resource->assignments()->exists()) {
             return back()->with(
                 'error',
-                'Unit tidak dapat dihapus karena sudah memiliki riwayat Assignment.'
+                'Unit tidak dapat dihapus karena sudah memiliki riwayat assignment.'
             );
         }
 
         $resource->delete();
 
-        return redirect()
-            ->route('instansi.units.index')
-            ->with('success', 'Unit berhasil dihapus.');
+        return back()->with('success', 'Unit berhasil dihapus.');
     }
 
     private function ownedResource(
