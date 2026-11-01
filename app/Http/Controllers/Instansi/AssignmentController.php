@@ -6,15 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Models\Assignment;
 use App\Models\Pengguna;
 use App\Services\Assignment\AssignmentStatusService;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AssignmentController extends Controller
 {
     /**
-     * Menampilkan Assignment milik Instansi login.
+     * Dashboard Assignment Instansi.
      */
     public function index(Request $request): View
     {
@@ -26,9 +26,15 @@ class AssignmentController extends Controller
                 'emergencyCase.lokasi',
                 'statusPenanganan',
             ])
-            ->whereHas('resource', function ($query) use ($user) {
-                $query->where('instansi_id', $user->instansi_id);
-            })
+            ->whereHas(
+                'resource',
+                function ($query) use ($user) {
+                    $query->where(
+                        'instansi_id',
+                        $user->instansi_id
+                    );
+                }
+            )
             ->orderByDesc('waktu_assign')
             ->paginate(15);
 
@@ -38,9 +44,53 @@ class AssignmentController extends Controller
         );
     }
 
-    /**
-     * Memperbarui status penanganan Assignment.
-     */
+    public function show(
+        Request $request,
+        int $assignmentId
+    ): View {
+        $user = $request->user();
+
+        $assignment = Assignment::query()
+            ->with([
+                'resource.lokasiPangkalan',
+                'emergencyCase.lokasi',
+
+                'statusPenanganan' => function (
+                    $query
+                ) {
+                    $query
+                        ->orderBy('waktu_update')
+                        ->orderBy('status_id');
+                },
+            ])
+            ->where(
+                'assignment_id',
+                $assignmentId
+            )
+            ->whereHas(
+                'resource',
+                function ($query) use ($user) {
+                    $query->where(
+                        'instansi_id',
+                        $user->instansi_id
+                    );
+                }
+            )
+            ->firstOrFail();
+
+        $latestStatus = $assignment
+            ->statusPenanganan
+            ->last();
+
+        return view(
+            'instansi.assignments.show',
+            compact(
+                'assignment',
+                'latestStatus'
+            )
+        );
+    }
+
     public function updateStatus(
         Request $request,
         int $assignmentId,
@@ -49,8 +99,11 @@ class AssignmentController extends Controller
         $validated = $request->validate([
             'status' => [
                 'required',
-                Rule::in(AssignmentStatusService::ALLOWED_STATUSES),
+                Rule::in(
+                    AssignmentStatusService::ALLOWED_STATUSES
+                ),
             ],
+
             'keterangan' => [
                 'required',
                 'string',
@@ -69,15 +122,26 @@ class AssignmentController extends Controller
         );
 
         if ($validated['status'] === 'selesai') {
-            $message = $result['resource_released']
-                ? 'Penanganan selesai. Resource tersedia kembali dan matching ulang telah dijalankan.'
-                : 'Penanganan selesai. Resource masih memiliki Assignment aktif lain.';
+
+            $message =
+                $result['resource_released']
+                    ? 'Penanganan selesai. Resource tersedia kembali dan matching ulang telah dijalankan.'
+                    : 'Penanganan selesai. Resource masih memiliki Assignment aktif lain.';
+
         } else {
-            $message = 'Status penanganan berhasil diperbarui.';
+
+            $message =
+                'Status penanganan berhasil diperbarui.';
         }
 
         return redirect()
-            ->route('instansi.assignments.index')
-            ->with('success', $message);
+            ->route(
+                'instansi.assignments.show',
+                $assignmentId
+            )
+            ->with(
+                'success',
+                $message
+            );
     }
 }

@@ -1,7 +1,7 @@
 @php
-    $dashboardActive = request()->is('instansi/assignments*');
-    $statusActive = request()->is('instansi/status-emergency*');
-    $unitActive = request()->is('instansi/units*');
+    $dashboardActive = request()->routeIs('instansi.assignments.index');
+    $statusActive = request()->routeIs('instansi.assignments.show');
+    $unitActive = request()->routeIs('instansi.units.*');
 @endphp
 
 <aside class="sticky top-0 flex h-screen w-full flex-col border-r border-slate-200 bg-white">   
@@ -26,7 +26,7 @@
 
         {{-- Dashboard --}}
         <a
-            href="{{ url('/instansi/assignments') }}"
+            href="{{ route('instansi.assignments.index') }}"
             class="relative mb-2 flex items-center gap-3 rounded-xl px-4 py-3
             text-sm transition
             {{ $dashboardActive
@@ -54,7 +54,7 @@
 
         {{-- Status Emergency --}}
         <a
-            href="{{ url('/instansi/status-emergency') }}"
+             href="{{ route('instansi.assignments.index') }}"
             class="relative mb-2 flex items-center gap-3 rounded-xl px-4 py-3
             text-sm transition
             {{ $statusActive
