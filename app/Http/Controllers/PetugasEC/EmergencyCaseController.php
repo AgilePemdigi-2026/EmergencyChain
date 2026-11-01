@@ -28,12 +28,29 @@ class EmergencyCaseController extends Controller
     {
         abort_unless($request->user()?->role === 'petugas_ec', 403);
 
-        $case = EmergencyCase::with(['pengguna', 'lokasi'])
-            ->findOrFail($caseId);
+        $case = EmergencyCase::with([
+            'pengguna',
+            'lokasi',
+            'assignments.resource',
+        ])->findOrFail($caseId);
 
         return view('petugas-ec.emergency-cases.show', [
             'case' => $case,
         ]);
+    }
+
+    public function hospitalMatchingPlaceholder(
+        Request $request,
+        int $caseId
+    ): View {
+        abort_unless($request->user()?->role === 'petugas_ec', 403);
+
+        $case = EmergencyCase::findOrFail($caseId);
+
+        return view(
+            'petugas-ec.emergency-cases.hospital-matching-placeholder',
+            compact('case')
+        );
     }
 
     public function update(
