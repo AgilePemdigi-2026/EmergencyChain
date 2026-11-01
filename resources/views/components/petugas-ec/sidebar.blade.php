@@ -1,4 +1,16 @@
 
+@php
+    $isEmergencyCase = request()->routeIs(
+        'petugas.ec.cases.index',
+        'petugas.ec.cases.show',
+        'petugas.ec.cases.update'
+    );
+
+    $isResourceMatching = request()->routeIs(
+        'petugas.ec.cases.resource-matching'
+    );
+@endphp
+
 <aside class="flex h-full min-h-screen w-full flex-col border-r
               border-slate-200 bg-white">
 
@@ -34,22 +46,32 @@
             </svg>
             Dashboard
         </div>
-
-        {{-- Emergency Case aktif --}}
+        {{-- Emergency Case --}}
         <div class="relative my-2">
-            <span class="absolute -left-4 top-1/2 h-8 w-1
-                         -translate-y-1/2 rounded-r bg-red-500">
-            </span>
 
-            <a href="{{ route('petugas.ec.cases.index') }}"
-               aria-current="page"
-               class="flex items-center gap-3 rounded-xl
-                      bg-red-100 px-4 py-3
-                      text-sm font-semibold text-red-500">
+            @if ($isEmergencyCase)
+                <span class="absolute -left-4 top-1/2 h-8 w-1
+                            -translate-y-1/2 rounded-r bg-red-500">
+                </span>
+            @endif
 
-                <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24"
-                     fill="none" stroke="currentColor"
-                     stroke-width="1.8" aria-hidden="true">
+            <a
+                href="{{ route('petugas.ec.cases.index') }}"
+                @if ($isEmergencyCase) aria-current="page" @endif
+                class="flex items-center gap-3 rounded-xl
+                    px-4 py-3 text-sm
+                    transition
+                    {{ $isEmergencyCase
+                            ? 'bg-red-100 font-semibold text-red-500'
+                            : 'font-medium text-slate-500 hover:bg-rose-50 hover:text-red-500' }}"
+            >
+
+                <svg class="h-5 w-5 shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    aria-hidden="true">
                     <rect x="3" y="5" width="18" height="16" rx="3"/>
                     <path d="M9 5V3h6v2M12 9v8M8 13h8"/>
                 </svg>
@@ -58,16 +80,38 @@
             </a>
         </div>
 
-        {{-- Menu fitur lainnya --}}
-        <div class="my-2 flex items-center gap-3 rounded-xl px-4 py-3
-                    text-sm font-medium text-slate-500">
-            <svg class="h-5 w-5" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor"
-                 stroke-width="1.8" aria-hidden="true">
-                <path d="M3 20h18M5 20V9l7-5 7 5v11M9 20v-7h6v7"/>
-            </svg>
-            Resource Matching
+
+        {{-- Resource Matching --}}
+        <div class="relative my-2">
+
+            @if ($isResourceMatching)
+                <span class="absolute -left-4 top-1/2 h-8 w-1
+                            -translate-y-1/2 rounded-r bg-red-500">
+                </span>
+            @endif
+
+            <div
+                @if ($isResourceMatching) aria-current="page" @endif
+                class="flex items-center gap-3 rounded-xl
+                    px-4 py-3 text-sm
+                    {{ $isResourceMatching
+                            ? 'bg-red-100 font-semibold text-red-500'
+                            : 'font-medium text-slate-500' }}"
+            >
+
+                <svg class="h-5 w-5 shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    aria-hidden="true">
+                    <path d="M3 20h18M5 20V9l7-5 7 5v11M9 20v-7h6v7"/>
+                </svg>
+
+                Resource Matching
+            </div>
         </div>
+
 
         <div class="my-2 flex items-center gap-3 rounded-xl px-4 py-3
                     text-sm font-medium text-slate-500">
