@@ -157,7 +157,7 @@ class ResourceMatchingService
     /**
      * Pemetaan jenis kejadian ke jenis Resource.
      */
-    private function getRequiredResourceTypes(
+    public function getRequiredResourceTypes(
         string $jenisKejadian
     ): ?array {
         return match (mb_strtolower(trim($jenisKejadian))) {

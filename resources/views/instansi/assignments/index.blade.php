@@ -177,12 +177,17 @@
                             </p>
                         </div>
 
-                        {{-- Route detail resmi belum tersedia --}}
-                        <a href="{{ route('instansi.assignments.show', $assignment->assignment_id) }}"
-                        class="mt-5 block rounded-lg border border-red-400 px-4 py-3 text-center text-sm font-semibold text-red-500 transition hover:bg-red-50">
+                <div class="mt-5">
+                    <a
+                        href="{{ route('instansi.assignments.show', $assignment->assignment_id) }}"
+                        class="inline-flex w-full items-center justify-center
+                            rounded-lg bg-red-500 px-4 py-3
+                            text-sm font-semibold text-white
+                            transition hover:bg-red-600"
+                    >
                         Buka Penanganan
                     </a>
-
+                </div>
 
                     </article>
 

@@ -12,14 +12,38 @@ class Resource extends Model
     protected $primaryKey = 'resource_id';
     public $timestamps = false;
 
+    public const STATUS_TERSEDIA = 'tersedia';
+    public const STATUS_DITUGASKAN = 'sedang_ditugaskan';
+    public const STATUS_TIDAK_TERSEDIA = 'tidak_tersedia';
+
     protected $fillable = [
         'instansi_id',
         'lokasi_id',
         'nama_resource',
         'jenis_resource',
+        'kapasitas_personel',
         'lokasi',
         'status_ketersediaan',
     ];
+
+    protected $casts = [
+        'kapasitas_personel' => 'integer',
+    ];
+
+    public static function statusOptions(): array
+    {
+        return [
+            self::STATUS_TERSEDIA => 'Tersedia',
+            self::STATUS_DITUGASKAN => 'Sedang Ditugaskan',
+            self::STATUS_TIDAK_TERSEDIA => 'Tidak Tersedia',
+        ];
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return self::statusOptions()[$this->status_ketersediaan]
+            ?? $this->status_ketersediaan;
+    }
 
     public function instansi(): BelongsTo
     {

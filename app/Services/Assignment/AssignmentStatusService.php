@@ -16,6 +16,7 @@ class AssignmentStatusService
 {
     public const ALLOWED_STATUSES = [
         'menuju_lokasi',
+        'tiba_di_lokasi',
         'dalam_penanganan',
         'selesai',
     ];
@@ -40,16 +41,19 @@ class AssignmentStatusService
             $keterangan
         ) {
 
-            // 1. Pastikan Assignment milik Instansi login.
+            // Pastikan Assignment benar-benar milik Instansi login.
             $assignment = Assignment::query()
                 ->where('assignment_id', $assignmentId)
                 ->whereHas('resource', function ($query) use ($user) {
-                    $query->where('instansi_id', $user->instansi_id);
+                    $query->where(
+                        'instansi_id',
+                        $user->instansi_id
+                    );
                 })
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            // Assignment selesai tidak boleh diperbarui lagi.
+            // Assignment yang sudah selesai/tidak aktif tidak boleh diubah.
             if (in_array(
                 $assignment->status_assign,
                 ['selesai', 'ditolak', 'dibatalkan'],
@@ -58,13 +62,16 @@ class AssignmentStatusService
                 abort(422, 'Assignment sudah tidak aktif.');
             }
 
-            // 2. Kunci Resource.
+            // Kunci Resource.
             $resource = Resource::query()
-                ->where('resource_id', $assignment->resource_id)
+                ->where(
+                    'resource_id',
+                    $assignment->resource_id
+                )
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            // 3. Simpan riwayat penanganan.
+            // Simpan riwayat status + catatan + waktu.
             StatusPenanganan::create([
                 'assignment_id' => $assignment->assignment_id,
                 'case_id' => $assignment->case_id,
@@ -75,32 +82,35 @@ class AssignmentStatusService
 
             $resourceReleased = false;
 
-            // 4. Jika penanganan selesai.
+            // Jika penanganan selesai.
             if ($status === 'selesai') {
 
                 $assignment->update([
                     'status_assign' => 'selesai',
                 ]);
 
-                // Periksa apakah Resource masih digunakan
-                // oleh Assignment aktif lainnya.
                 $hasOtherActiveAssignment = Assignment::query()
-                    ->where('resource_id', $resource->resource_id)
+                    ->where(
+                        'resource_id',
+                        $resource->resource_id
+                    )
                     ->where(
                         'assignment_id',
                         '!=',
                         $assignment->assignment_id
                     )
-                    ->whereNotIn('status_assign', [
-                        'selesai',
-                        'ditolak',
-                        'dibatalkan',
-                    ])
+                    ->whereNotIn(
+                        'status_assign',
+                        [
+                            'selesai',
+                            'ditolak',
+                            'dibatalkan',
+                        ]
+                    )
                     ->exists();
 
-                // Resource hanya dilepas jika tidak ada
-                // Assignment aktif lainnya.
                 if (!$hasOtherActiveAssignment) {
+
                     $resource->update([
                         'status_ketersediaan' => 'tersedia',
                     ]);
@@ -109,7 +119,6 @@ class AssignmentStatusService
                 }
             }
 
-            // 5. Sinkronisasi status Emergency Case.
             $this->syncEmergencyCaseStatus(
                 $assignment->case_id
             );
@@ -119,7 +128,7 @@ class AssignmentStatusService
             ];
         });
 
-        // 6. Matching ulang setelah transaksi selesai.
+        // Jalankan matching ulang jika resource kembali tersedia.
         if ($result['resource_released']) {
             $result['rematching'] =
                 $this->rematchWaitingCases();
@@ -129,20 +138,17 @@ class AssignmentStatusService
     }
 
     /**
-     * Menyesuaikan status Emergency Case
-     * berdasarkan seluruh Assignment.
+     * Sinkronisasi status Emergency Case berdasarkan
+     * perkembangan seluruh Assignment pada Case.
      */
     private function syncEmergencyCaseStatus(
         int $caseId
     ): void {
-
         $case = EmergencyCase::query()
             ->where('case_id', $caseId)
             ->lockForUpdate()
             ->firstOrFail();
 
-        // Jangan mengubah Case yang masih membutuhkan
-        // Resource atau masih perlu verifikasi.
         if (in_array(
             $case->status_laporan,
             ['Menunggu Assignment', 'Perlu Verifikasi'],
@@ -159,7 +165,6 @@ class AssignmentStatusService
             return;
         }
 
-        // Case selesai hanya jika seluruh Assignment selesai.
         $allCompleted = $assignments->every(
             fn ($assignment) =>
                 $assignment->status_assign === 'selesai'
@@ -173,7 +178,6 @@ class AssignmentStatusService
             return;
         }
 
-        // Ambil status penanganan terakhir setiap Assignment.
         $latestStatuses = StatusPenanganan::query()
             ->whereIn(
                 'assignment_id',
@@ -185,18 +189,28 @@ class AssignmentStatusService
             ->unique('assignment_id')
             ->pluck('status');
 
-        // Jika ada unit yang sedang melakukan penanganan.
-        if ($latestStatuses->contains('dalam_penanganan')) {
+        if (
+            $latestStatuses->contains(
+                'dalam_penanganan'
+            )
+        ) {
             $newStatus = 'Dalam Penanganan';
-        }
 
-        // Jika ada unit yang sedang menuju lokasi.
-        elseif ($latestStatuses->contains('menuju_lokasi')) {
+        } elseif (
+            $latestStatuses->contains(
+                'tiba_di_lokasi'
+            )
+        ) {
+            $newStatus = 'Tiba di Lokasi';
+
+        } elseif (
+            $latestStatuses->contains(
+                'menuju_lokasi'
+            )
+        ) {
             $newStatus = 'Menuju Lokasi';
-        }
 
-        // Belum ada unit yang mulai bertugas.
-        else {
+        } else {
             $newStatus = 'Menunggu';
         }
 
@@ -206,12 +220,16 @@ class AssignmentStatusService
     }
 
     /**
-     * Mencoba kembali Emergency Case yang menunggu Assignment.
+     * Mencoba matching ulang Case yang masih
+     * menunggu Assignment.
      */
     private function rematchWaitingCases(): array
     {
         $waitingCases = EmergencyCase::query()
-            ->where('status_laporan', 'Menunggu Assignment')
+            ->where(
+                'status_laporan',
+                'Menunggu Assignment'
+            )
             ->orderBy('waktu_laporan')
             ->orderBy('case_id')
             ->get();
@@ -220,6 +238,7 @@ class AssignmentStatusService
 
         foreach ($waitingCases as $case) {
             try {
+
                 $results[$case->case_id] =
                     $this->matchingService->match($case);
 
@@ -229,7 +248,8 @@ class AssignmentStatusService
                     'Resource matching ulang gagal.',
                     [
                         'case_id' => $case->case_id,
-                        'error' => $exception->getMessage(),
+                        'error' =>
+                            $exception->getMessage(),
                     ]
                 );
 

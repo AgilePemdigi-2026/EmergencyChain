@@ -1,8 +1,8 @@
-
 <?php
 
 use App\Http\Controllers\PetugasEC\EmergencyCaseController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PetugasEC\ResourceMatchingController;
 
 Route::middleware('auth')->group(function () {
 
@@ -22,5 +22,17 @@ Route::middleware('auth')->group(function () {
         [EmergencyCaseController::class, 'update']
     )->whereNumber('caseId')
     ->name('petugas.ec.cases.update');
+
+    Route::get(
+        '/petugas-ec/emergency-cases/{caseId}/resource-matching',
+        [ResourceMatchingController::class, 'show']
+    )->whereNumber('caseId')
+    ->name('petugas.ec.cases.resource-matching');
+
+    Route::get(
+        '/petugas-ec/emergency-cases/{caseId}/hospital-matching',
+        [EmergencyCaseController::class, 'hospitalMatchingPlaceholder']
+    )->whereNumber('caseId')
+    ->name('petugas.ec.cases.hospital-matching');
 
 });
