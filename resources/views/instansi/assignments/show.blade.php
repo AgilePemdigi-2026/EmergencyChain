@@ -22,7 +22,6 @@
         'prioritas' => 'Belum tersedia',
         'resource' => $resource?->nama_resource ?? 'Tidak tersedia',
         'personel' => null,
-        'jumlah_unit' => 1,
         'status' => $latestStatus?->status ?? 'diterima',
         'deskripsi' => $emergencyCase?->kondisi ?? 'Belum ada deskripsi kejadian.',
     ];
@@ -167,43 +166,6 @@ $tahapAktif = $urutanStatus[$statusSaatIni] ?? 0;
                         </div>
                     </div>
 
-                    {{-- Jumlah unit diberangkatkan --}}
-                    <div class="rounded-xl border border-rose-100 bg-rose-50/50 p-4">
-                        <label
-                            for="jumlah_unit"
-                            class="block text-sm font-semibold text-slate-700"
-                        >
-                            Jumlah Unit Diberangkatkan
-                        </label>
-
-                        <p class="mt-1 text-xs text-slate-500">
-                            Masukkan jumlah unit yang benar-benar diberangkatkan.
-                        </p>
-
-                        <div class="mt-3 flex flex-wrap items-center gap-3">
-                            <input
-                                id="jumlah_unit"
-                                type="number"
-                                min="1"
-                                step="1"
-                                value="{{ $case['jumlah_unit'] }}"
-                                class="w-28 rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-800 focus:border-red-400 focus:outline-none"
-                            >
-
-                            <button
-                                id="simpan-jumlah-unit"
-                                type="button"
-                                class="rounded-lg bg-red-500 px-5 py-2 font-semibold text-white hover:bg-red-600"
-                            >
-                                Simpan Jumlah
-                            </button>
-                        </div>
-
-                        <p id="pesan-jumlah-unit" role="status" class="mt-2 text-xs text-slate-500">
-                            Simulasi frontend — belum tersimpan ke database.
-                        </p>
-                    </div>
-
                     {{-- Deskripsi --}}
                     <div class="rounded-xl bg-rose-50 p-4">
                         <p class="text-sm text-slate-600">
@@ -325,25 +287,6 @@ $tahapAktif = $urutanStatus[$statusSaatIni] ?? 0;
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const inputJumlah = document.getElementById('jumlah_unit');
-    const tombolJumlah = document.getElementById('simpan-jumlah-unit');
-    const pesanJumlah = document.getElementById('pesan-jumlah-unit');
-
-    tombolJumlah.addEventListener('click', function () {
-        const nilai = inputJumlah.value.trim();
-        const jumlah = Number(nilai);
-
-        if (nilai === '' || !Number.isSafeInteger(jumlah) || jumlah < 1) {
-            pesanJumlah.textContent = 'Jumlah unit harus bilangan bulat minimal 1.';
-            pesanJumlah.className = 'mt-2 text-xs text-red-600';
-            return;
-        }
-
-        pesanJumlah.textContent =
-            `Simulasi: ${jumlah} unit diberangkatkan. Belum tersimpan ke database.`;
-        pesanJumlah.className = 'mt-2 text-xs text-green-600';
-    });
-
     const pilihanStatus = document.getElementById('status_berikutnya');
     const catatan = document.getElementById('catatan_lapangan');
     const pesanStatus = document.getElementById('pesan-status');
