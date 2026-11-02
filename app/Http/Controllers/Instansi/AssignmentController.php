@@ -43,11 +43,11 @@ class AssignmentController extends Controller
             compact('assignments')
         );
     }
-
-    public function show(
-        Request $request,
-        int $assignmentId
-    ): View {
+        /**
+     * Detail Assignment milik Instansi yang login.
+     */
+    public function show(Request $request, int $assignmentId): View
+    {
         $user = $request->user();
 
         $assignment = Assignment::query()
@@ -90,7 +90,6 @@ class AssignmentController extends Controller
             )
         );
     }
-
     public function updateStatus(
         Request $request,
         int $assignmentId,

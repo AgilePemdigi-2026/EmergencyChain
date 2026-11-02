@@ -4,8 +4,7 @@
     $unitActive = request()->routeIs('instansi.units.*');
 @endphp
 
-<aside class="sticky top-0 flex h-screen w-full flex-col border-r border-slate-200 bg-white">   
-
+<aside class="sticky top-0 flex h-screen w-full flex-col border-r border-slate-200 bg-white">
     {{-- Brand --}}
     <div class="px-6 pb-10 pt-8">
         <h1 class="whitespace-nowrap text-2xl font-bold tracking-tight text-slate-700">

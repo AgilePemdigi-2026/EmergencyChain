@@ -201,19 +201,16 @@ public function store(Request $request): RedirectResponse
     ): RedirectResponse {
         $resource = $this->ownedResource(
             $request,
-            $resourceId
-        );
-
- 
+            $resourceId);
         if (
             $resource->status_ketersediaan
             === Resource::STATUS_DITUGASKAN
-        ) {
-            return back()->with(
-                'error',
-                'Unit yang sedang ditugaskan tidak dapat diubah ketersediaannya secara manual.'
-            );
-        }
+            ){
+                return back()->with(
+                    'error',
+                    'Unit yang sedang ditugaskan tidak dapat diubah ketersediaannya secara manual.'
+                    );
+            }
 
         $validated = $request->validate([
             'status_ketersediaan' => [

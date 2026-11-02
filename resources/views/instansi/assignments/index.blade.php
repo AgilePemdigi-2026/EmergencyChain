@@ -180,8 +180,8 @@
                 <div class="mt-5">
                     <a
                         href="{{ route('instansi.assignments.show', $assignment->assignment_id) }}"
-                        class="inline-flex w-full items-center justify-center 
-                            rounded-lg bg-red-500 px-4 py-3 
+                        class="inline-flex w-full items-center justify-center
+                            rounded-lg bg-red-500 px-4 py-3
                             text-sm font-semibold text-white
                             transition hover:bg-red-600"
                     >
