@@ -534,21 +534,6 @@
 
             <div>
                 <label class="mb-2 block text-sm font-semibold text-slate-700">
-                    Lokasi / Posko
-                </label>
-
-                <input
-                    type="text"
-                    name="lokasi"
-                    required
-                    maxlength="255"
-                    placeholder="Contoh: Posko Pusat Genteng"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                >
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-slate-700">
                     Ketersediaan Awal
                 </label>
 

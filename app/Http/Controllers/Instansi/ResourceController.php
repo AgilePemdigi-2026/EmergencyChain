@@ -91,83 +91,72 @@ class ResourceController extends Controller
     }
 
 
-public function store(Request $request): RedirectResponse
-{
-    $validated = $request->validate([
-        'nama_resource' => [
-            'required',
-            'string',
-            'max:100',
-        ],
 
-        'jenis_resource' => [
-            'required',
-            'string',
-            'max:50',
-        ],
+    public function store(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'nama_resource' => [
+                'required',
+                'string',
+                'max:100',
+            ],
 
-        'kapasitas_personel' => [
-            'required',
-            'integer',
-            'min:1',
-            'max:999',
-        ],
+            'jenis_resource' => [
+                'required',
+                'string',
+                'max:50',
+            ],
 
-        'status_ketersediaan' => [
-            'required',
-            Rule::in([
-                Resource::STATUS_TERSEDIA,
-                Resource::STATUS_TIDAK_TERSEDIA,
-            ]),
-        ],
-    ]);
+            'kapasitas_personel' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:999',
+            ],
 
-    $user = $request->user();
+            'status_ketersediaan' => [
+                'required',
+                Rule::in([
+                    Resource::STATUS_TERSEDIA,
+                    Resource::STATUS_TIDAK_TERSEDIA,
+                ]),
+            ],
+        ]);
 
-    $resourcePangkalan = Resource::query()
-        ->where('instansi_id', $user->instansi_id)
-        ->whereNotNull('lokasi_id')
-        ->with('lokasiPangkalan')
-        ->first();
+        $instansi = $request->user()
+            ->instansi()
+            ->with('lokasiPangkalan')
+            ->first();
 
-    if (!$resourcePangkalan || !$resourcePangkalan->lokasiPangkalan) {
-        return back()
-            ->withInput()
+        if (!$instansi || !$instansi->lokasiPangkalan) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Lokasi pangkalan Instansi belum tersedia. Unit belum dapat ditambahkan.'
+                );
+        }
+
+        $lokasi = $instansi->lokasiPangkalan;
+
+        Resource::create([
+            'instansi_id' => $instansi->instansi_id,
+            'lokasi_id' => $lokasi->lokasi_id,
+            'nama_resource' => $validated['nama_resource'],
+            'jenis_resource' => $validated['jenis_resource'],
+            'kapasitas_personel' => $validated['kapasitas_personel'],
+            'lokasi' => $lokasi->alamat,
+            'status_ketersediaan' => $validated['status_ketersediaan'],
+        ]);
+
+        return redirect()
+            ->route('instansi.units.index')
             ->with(
-                'error',
-                'Lokasi pangkalan Instansi belum tersedia. Unit belum dapat ditambahkan.'
+                'success',
+                'Unit berhasil ditambahkan.'
             );
     }
 
-    Resource::create([
-        'instansi_id' => $user->instansi_id,
-
-        'lokasi_id' =>
-            $resourcePangkalan->lokasi_id,
-
-        'nama_resource' =>
-            $validated['nama_resource'],
-
-        'jenis_resource' =>
-            $validated['jenis_resource'],
-
-        'kapasitas_personel' =>
-            $validated['kapasitas_personel'],
-
-        'lokasi' =>
-            $resourcePangkalan->lokasiPangkalan->alamat,
-
-        'status_ketersediaan' =>
-            $validated['status_ketersediaan'],
-    ]);
-
-    return redirect()
-        ->route('instansi.units.index')
-        ->with(
-            'success',
-            'Unit berhasil ditambahkan.'
-        );
-}
     public function update(Request $request, int $resourceId)
     {
         $resource = $this->ownedResource($request, $resourceId);
