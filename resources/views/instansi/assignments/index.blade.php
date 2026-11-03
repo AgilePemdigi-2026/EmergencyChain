@@ -205,42 +205,32 @@
 
         </section>
 
-        {{-- Peta sementara --}}
-        <section class="overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm">
+        {{-- Peta Penugasan --}}
+<section class="overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm">
 
-            <div class="border-b border-slate-100 px-5 py-4">
-                <h2 class="font-semibold text-slate-800">
-                    Peta Penugasan
-                </h2>
-                <p class="mt-1 text-xs text-slate-400">
-                    Area operasional instansi
-                </p>
-            </div>
+    <div class="border-b border-slate-100 px-5 py-4">
+        <h2 class="font-semibold text-slate-800">
+            Peta Penugasan
+        </h2>
 
-            <div class="relative flex h-64 items-center justify-center overflow-hidden bg-slate-100">
+        <p class="mt-1 text-xs text-slate-400">
+            Lokasi seluruh Assignment instansi Anda
+        </p>
+    </div>
 
-                <div
-                    class="absolute inset-0 opacity-60"
-                    style="background-image: linear-gradient(35deg, transparent 45%, white 46%, white 52%, transparent 53%), linear-gradient(125deg, transparent 45%, white 46%, white 52%, transparent 53%); background-size: 130px 130px;"
-                ></div>
+    <div
+        id="assignment-locations-map"
+        class="h-80 w-full bg-slate-100"
+        data-locations="{{ $mapLocations->toJson() }}"
+    ></div>
 
-                <div class="relative z-10 rounded-xl bg-white px-4 py-3 text-center shadow-md">
-                    <p class="text-2xl">📍</p>
-                    <p class="mt-1 text-xs font-semibold text-slate-700">
-                        Peta Penugasan
-                    </p>
-                    <p class="text-xs text-slate-500">
-                        Integrasi peta menyusul
-                    </p>
-                </div>
+    <div class="px-5 py-4">
+        <p class="text-xs text-slate-500">
+            {{ $mapLocations->count() }} lokasi kejadian ditampilkan pada peta.
+        </p>
+    </div>
 
-            </div>
-
-            <p class="px-5 py-4 text-xs text-slate-400">
-                Peta masih ilustrasi. Lokasi kejadian di kartu sudah berasal dari database.
-            </p>
-
-        </section>
+</section>
 
     </div>
 </div>

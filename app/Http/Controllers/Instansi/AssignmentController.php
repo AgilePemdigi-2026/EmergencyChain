@@ -18,31 +18,58 @@ class AssignmentController extends Controller
      */
     public function index(Request $request): View
     {
-        $user = $request->user();
+    $user = $request->user();
 
-        $assignments = Assignment::query()
-            ->with([
-                'resource.lokasiPangkalan',
-                'emergencyCase.lokasi',
-                'statusPenanganan',
-            ])
-            ->whereHas(
-                'resource',
-                function ($query) use ($user) {
-                    $query->where(
-                        'instansi_id',
-                        $user->instansi_id
-                    );
-                }
-            )
-            ->orderByDesc('waktu_assign')
-            ->paginate(15);
+    // Data untuk kartu Assignment (dengan pagination).
+    $assignments = Assignment::query()
+        ->with([
+            'resource.lokasiPangkalan',
+            'emergencyCase.lokasi',
+            'statusPenanganan',
+        ])
+        ->whereHas('resource', function ($query) use ($user) {
+            $query->where('instansi_id', $user->instansi_id);
+        })
+        ->orderByDesc('waktu_assign')
+        ->paginate(15);
 
-        return view(
-            'instansi.assignments.index',
-            compact('assignments')
-        );
-    }
+    // Data semua lokasi Assignment untuk peta Dashboard.
+    $mapLocations = Assignment::query()
+        ->with('emergencyCase.lokasi')
+        ->whereHas('resource', function ($query) use ($user) {
+            $query->where('instansi_id', $user->instansi_id);
+        })
+        ->get()
+        ->map(function ($assignment) {
+            $case = $assignment->emergencyCase;
+            $lokasi = $case?->lokasi;
+
+            if (
+                !$lokasi ||
+                $lokasi->latitude === null ||
+                $lokasi->longitude === null
+            ) {
+                return null;
+            }
+
+            return [
+                'assignment_id' => $assignment->assignment_id,
+                'case_id' => $assignment->case_id,
+                'jenis_kejadian' => $case->jenis_kejadian,
+                'alamat' => $lokasi->alamat,
+                'latitude' => (float) $lokasi->latitude,
+                'longitude' => (float) $lokasi->longitude,
+            ];
+        })
+        ->filter()
+        ->values();
+
+    return view(
+        'instansi.assignments.index',
+        compact('assignments', 'mapLocations')
+    );
+}
+
         /**
      * Detail Assignment milik Instansi yang login.
      */
@@ -83,12 +110,12 @@ class AssignmentController extends Controller
             ->last();
 
         return view(
-            'instansi.assignments.show',
-            compact(
-                'assignment',
-                'latestStatus'
-            )
-        );
+    'instansi.assignments.show',
+    compact(
+        'assignment',
+        'latestStatus'
+    )
+);
     }
     public function updateStatus(
         Request $request,
