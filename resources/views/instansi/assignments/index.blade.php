@@ -89,7 +89,7 @@
     </div>
 
     {{-- Area Utama --}}
-    <div class="grid gap-5 xl:grid-cols-3">
+    <div class="grid items-start gap-5 xl:grid-cols-3">
 
         {{-- Daftar Assignment --}}
         <section class="rounded-2xl border border-rose-100 bg-white shadow-sm xl:col-span-2">
@@ -206,7 +206,7 @@
         </section>
 
         {{-- Peta Penugasan --}}
-<section class="overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm">
+        <section class="self-start overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm">
 
     <div class="border-b border-slate-100 px-5 py-4">
         <h2 class="font-semibold text-slate-800">
