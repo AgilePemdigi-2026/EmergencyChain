@@ -30,19 +30,19 @@ class AuthController extends Controller
             'agreement' => ['accepted'],
         ]);
 
-        $pengguna = Pengguna::create([
+        Pengguna::create([
             'nama' => $validated['nama'],
             'no_telp' => $validated['no_telp'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
         ]);
 
-        Auth::login($pengguna);
-        $request->session()->regenerate();
-
         return redirect()
-            ->route('pelapor.laporan.create')
-            ->with('success', 'Registrasi berhasil!');
+            ->route('login')
+            ->with(
+                'success',
+                'Registrasi berhasil. Silakan login menggunakan akun Anda.'
+            );
     }
 
     public function showLogin()
