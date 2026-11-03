@@ -121,9 +121,17 @@
             return null;
         }
 
-        return \Carbon\Carbon::parse(
-            $item->waktu_update
-        );
+        return $item->waktu_update;
+    };
+
+
+    $formatWib = function ($time, string $format = 'H:i') {
+    if (!$time) {
+        return null;
+    }
+
+    return \Carbon\Carbon::parse($time)
+        ->format($format);
     };
 @endphp
 
@@ -381,9 +389,10 @@
 
                                     @if($time)
 
-                                        {{ \Carbon\Carbon::parse(
-                                            $time
-                                        )->format('H:i') }}
+                                        {{ $formatWib(
+                                            $time,
+                                            'H:i'
+                                        ) }}
                                         WIB
 
                                     @elseif($active)
@@ -487,7 +496,21 @@
 
                         </div>
 
+                        {{-- Kondisi kejadian --}}
+                        <div>
 
+                            <p class="text-xs text-slate-400">
+                                Kondisi Kejadian
+                            </p>
+
+                            <p
+                                class="mt-1 font-semibold
+                                    text-slate-800"
+                            >
+                                {{ $case->kondisi ?? 'Tidak ada informasi kondisi kejadian.' }}
+                            </p>
+
+                        </div>
                         {{-- Lokasi --}}
                         <div>
 
@@ -722,12 +745,11 @@
                                        text-slate-400"
                             >
                                 {{
-                                    \Carbon\Carbon::parse(
+                                    $formatWib(
                                         $assignment
                                             ->waktu_konfirmasi
                                         ?? $assignment
-                                            ->waktu_assign
-                                    )->format(
+                                            ->waktu_assign,
                                         'd M Y, H:i'
                                     )
                                 }}
@@ -829,10 +851,9 @@
                                            text-slate-400"
                                 >
                                     {{
-                                        \Carbon\Carbon::parse(
+                                        $formatWib(
                                             $item
-                                                ->waktu_update
-                                        )->format(
+                                                ->waktu_update,
                                             'd M Y, H:i'
                                         )
                                     }}
@@ -884,83 +905,162 @@
 
         <div class="space-y-5">
 
-            <section
-                class="overflow-hidden rounded-2xl
-                       border border-rose-100
-                       bg-white shadow-sm"
-            >
 
-                <div
-                    class="relative flex h-64
-                           items-center justify-center
-                           overflow-hidden
-                           bg-slate-100"
+
+                <link
+                    rel="stylesheet"
+                    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+                    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+                    crossorigin=""
                 >
 
-                    <div
-                        class="absolute inset-0 opacity-60"
-                        style="
-                            background-image:
-                            linear-gradient(
-                                35deg,
-                                transparent 45%,
-                                white 46%,
-                                white 52%,
-                                transparent 53%
-                            ),
-                            linear-gradient(
-                                125deg,
-                                transparent 45%,
-                                white 46%,
-                                white 52%,
-                                transparent 53%
-                            );
-
-                            background-size:
-                                130px 130px;
-                        "
-                    ></div>
-
-
-                    <div
-                        class="relative z-10
-                               max-w-[80%]
-                               rounded-xl bg-white
-                               px-4 py-3
-                               text-center
-                               shadow-md"
-                    >
-
-                        <p class="text-2xl">
-                            📍
-                        </p>
-
-                        <p
-                            class="mt-1 text-xs
-                                   font-semibold
-                                   text-slate-700"
-                        >
+                <section
+                    class="overflow-hidden rounded-2xl
+                        border border-rose-100
+                        bg-white shadow-sm"
+                >
+                    <div class="border-b border-slate-100 px-5 py-4">
+                        <h2 class="font-semibold text-slate-800">
                             Lokasi Kejadian
-                        </p>
+                        </h2>
 
-                        <p
-                            class="mt-1 text-xs
-                                   text-slate-500"
-                        >
-                            {{
-                                $case->lokasi?->alamat
-                                ?? 'Lokasi tidak tersedia'
-                            }}
+                        <p class="mt-1 text-xs text-slate-400">
+                            Lokasi berdasarkan laporan Emergency Case.
                         </p>
-
                     </div>
 
-                </div>
+                    @if(
+                        $case->lokasi
+                        && $case->lokasi->latitude !== null
+                        && $case->lokasi->longitude !== null
+                    )
 
-                <p class="px-4 py-3 text-xs text-slate-400">
-                    Peta sementara — akan mengikuti map halaman Pelapor.
-                </p>
-            </section>
+                        <div
+                            id="emergency-map"
+                            class="h-64 w-full"
+                            data-latitude="{{ $case->lokasi->latitude }}"
+                            data-longitude="{{ $case->lokasi->longitude }}"
+                        ></div>
+
+                        <div class="border-t border-slate-100 px-4 py-3">
+                            <div class="flex items-start gap-2">
+                                <span class="mt-0.5">📍</span>
+
+                                <div>
+                                    <p class="text-xs font-semibold text-slate-700">
+                                        Lokasi Kejadian
+                                    </p>
+
+                                    <p class="mt-1 text-xs leading-5 text-slate-500">
+                                        {{ $case->lokasi->alamat ?? 'Alamat tidak tersedia' }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                    @else
+
+                        <div
+                            class="flex h-64 items-center justify-center
+                                bg-slate-50 px-6 text-center"
+                        >
+                            <div>
+                                <p class="text-2xl">📍</p>
+
+                                <p class="mt-2 text-sm font-semibold text-slate-600">
+                                    Koordinat lokasi tidak tersedia
+                                </p>
+
+                                <p class="mt-1 text-xs text-slate-400">
+                                    Peta tidak dapat ditampilkan untuk Emergency Case ini.
+                                </p>
+                            </div>
+                        </div>
+
+                    @endif
+                </section>
+
+
+                @if(
+                    $case->lokasi
+                    && $case->lokasi->latitude !== null
+                    && $case->lokasi->longitude !== null
+                )
+
+                    <script
+                        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+                        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+                        crossorigin=""
+                    ></script>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function () {
+
+                            const mapElement =
+                                document.getElementById('emergency-map');
+
+                            if (!mapElement || typeof L === 'undefined') {
+                                return;
+                            }
+
+                            const latitude =
+                                parseFloat(mapElement.dataset.latitude);
+
+                            const longitude =
+                                parseFloat(mapElement.dataset.longitude);
+
+                            if (
+                                Number.isNaN(latitude)
+                                || Number.isNaN(longitude)
+                            ) {
+                                return;
+                            }
+
+                            const map = L.map(
+                                'emergency-map',
+                                {
+                                    scrollWheelZoom: false,
+                                }
+                            ).setView(
+                                [latitude, longitude],
+                                16
+                            );
+
+                            L.tileLayer(
+                                'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                {
+                                    maxZoom: 19,
+                                    attribution:
+                                        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                                }
+                            ).addTo(map);
+
+                            const marker = L.marker(
+                                [latitude, longitude]
+                            ).addTo(map);
+
+                            const alamat =
+    @js($case->lokasi->alamat ?? 'Alamat tidak tersedia');
+
+                            marker
+                                .bindPopup(
+                                    `
+                                        <div style="min-width: 180px;">
+                                            <strong>Lokasi Kejadian</strong>
+                                            <br>
+                                            ${alamat}
+                                        </div>
+                                    `
+                                )
+                                .openPopup();
+
+                            setTimeout(function () {
+                                map.invalidateSize();
+                            }, 100);
+                        });
+                    </script>
+
+                @endif
 
             <section
                 class="rounded-2xl border
