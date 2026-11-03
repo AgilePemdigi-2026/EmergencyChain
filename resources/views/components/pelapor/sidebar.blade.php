@@ -1,8 +1,8 @@
 
 <aside
-    class="flex h-full w-full flex-col
+    class="sticky top-0 flex h-screen w-full flex-col
            border-r border-slate-200 bg-white
-           lg:min-h-screen lg:w-64"
+           lg:w-64 lg:shrink-0"
 >
     {{-- Logo --}}
     <div class="px-6 pb-7 pt-8">
