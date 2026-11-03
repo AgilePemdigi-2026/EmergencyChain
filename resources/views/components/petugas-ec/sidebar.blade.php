@@ -11,7 +11,7 @@
     );
 @endphp
 
-<aside class="flex h-full min-h-screen w-full flex-col border-r
+<aside class="sticky top-0 flex h-screen w-full flex-col border-r
               border-slate-200 bg-white">
 
     {{-- Brand --}}
