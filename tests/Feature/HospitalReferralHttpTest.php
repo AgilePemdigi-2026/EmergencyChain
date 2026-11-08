@@ -131,8 +131,8 @@ class HospitalReferralHttpTest extends TestCase
         $this->actingAs($data['userRs1'])
             ->get(route('hospital.referrals.index'))
             ->assertOk()
-            ->assertSee('Permintaan #1')
-            ->assertSee('Terima Pasien');
+            ->assertSee('Permintaan Rujukan #1')
+            ->assertSee('Terima');
 
         $this->actingAs($data['userRs2'])
             ->get(route('hospital.referrals.index'))
@@ -192,7 +192,7 @@ class HospitalReferralHttpTest extends TestCase
         $this->actingAs($data['userRs2'])
             ->get(route('hospital.referrals.index'))
             ->assertOk()
-            ->assertSee('Terima Pasien');
+            ->assertSee('Terima');
     }
 
     public function test_rs_lain_tidak_bisa_merespons(): void
@@ -216,4 +216,45 @@ class HospitalReferralHttpTest extends TestCase
             'status' => 'menunggu',
         ]);
     }
+public function test_rs_dapat_melihat_detail_permintaan_miliknya(): void
+{
+    $data = $this->buatDataTest();
+
+    $this->actingAs($data['userEc'])
+        ->post(route('hospital.referrals.start', $data['caseId']))
+        ->assertRedirect();
+
+    $requestId = DB::table('hospital_referral_requests')
+        ->value('id');
+
+    $this->actingAs($data['userRs1'])
+        ->get(route('hospital.referrals.show', $requestId))
+        ->assertOk()
+        ->assertSee('Detail Permintaan Rujukan')
+        ->assertSee('Korban pingsan')
+        ->assertSee('Terima Permintaan')
+        ->assertSee('Tolak Permintaan');
+}
+
+public function test_rs_tidak_bisa_melihat_detail_permintaan_rs_lain(): void
+{
+    $data = $this->buatDataTest();
+
+    $this->actingAs($data['userEc'])
+        ->post(route('hospital.referrals.start', $data['caseId']))
+        ->assertRedirect();
+
+    $requestId = DB::table('hospital_referral_requests')
+        ->value('id');
+
+    $this->actingAs($data['userRs2'])
+        ->get(route('hospital.referrals.show', $requestId))
+        ->assertNotFound();
+
+    // Pemilik sebenarnya tetap dapat mengakses.
+    $this->actingAs($data['userRs1'])
+        ->get(route('hospital.referrals.show', $requestId))
+        ->assertOk();
+}
+
 }

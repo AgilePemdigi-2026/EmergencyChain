@@ -8,28 +8,50 @@ use App\Services\Hospital\HospitalReferralService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Models\EmergencyCase;
 
 class HospitalReferralController extends Controller
-{
-    public function index(Request $request): View
-    {
-        $user = $request->user();
+{public function index(Request $request): View{
+    $user = $request->user();
 
-        abort_unless(
-            $user && $user->role === 'rumah_sakit'
-                && $user->rumah_sakit_id,
-            403
-        );
+    abort_unless(
+        $user && $user->role === 'rumah_sakit'
+            && $user->rumah_sakit_id,
+        403
+    );
 
-        $requests = HospitalReferralRequest::query()
-            ->where('rumah_sakit_id', $user->rumah_sakit_id)
-            ->orderByDesc('requested_at')
-            ->paginate(10);
+    $query = HospitalReferralRequest::query()
+        ->where('rumah_sakit_id', $user->rumah_sakit_id);
 
-        return view('hospital.referrals.index', [
-            'requests' => $requests,
-        ]);
-    }
+    $stats = [
+        'incoming' => (clone $query)->count(),
+
+        'waiting' => (clone $query)
+            ->where('status', 'menunggu')
+            ->where('expires_at', '>', now())
+            ->count(),
+
+        'accepted_today' => (clone $query)
+            ->where('status', 'diterima')
+            ->whereDate('responded_at', today())
+            ->count(),
+
+        'rejected' => (clone $query)
+            ->where('status', 'ditolak')
+            ->count(),
+    ];
+
+    $requests = (clone $query)
+        ->with('referral')
+        ->orderByDesc('requested_at')
+        ->paginate(10);
+
+    return view('hospital.referrals.index', [
+        'requests' => $requests,
+        'stats' => $stats,
+    ]);
+}
+
 
     public function start(
         int $caseId,
@@ -83,4 +105,29 @@ class HospitalReferralController extends Controller
                 'Respons rujukan berhasil disimpan.'
             );
     }
+    public function show(Request $request, int $requestId): View
+{
+    $user = $request->user();
+
+    abort_unless(
+        $user && $user->role === 'rumah_sakit'
+            && $user->rumah_sakit_id,
+        403
+    );
+
+    $referralRequest = HospitalReferralRequest::query()
+        ->with('referral')
+        ->where('rumah_sakit_id', $user->rumah_sakit_id)
+        ->findOrFail($requestId);
+
+    $case = EmergencyCase::query()
+        ->with('lokasi')
+        ->where('case_id', $referralRequest->referral->case_id)
+        ->firstOrFail();
+
+    return view('hospital.referrals.show', [
+        'referralRequest' => $referralRequest,
+        'case' => $case,
+    ]);
+}
 }

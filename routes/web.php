@@ -26,6 +26,12 @@ Route::middleware('auth')->group(function () {
         [HospitalReferralController::class, 'start']
     )->whereNumber('caseId')
      ->name('hospital.referrals.start');
+
+    Route::get(
+    '/hospital/referrals/{requestId}',
+    [HospitalReferralController::class, 'show']
+)->whereNumber('requestId')
+ ->name('hospital.referrals.show');
 });
 
 
