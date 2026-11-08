@@ -1,199 +1,90 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>@yield('title', 'Rumah Sakit - EmergencyChain')</title>
+    <title>@yield('title', 'EmergencyChain - Rumah Sakit')</title>
 
-    <style>
-        * { box-sizing: border-box; }
-
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            color: #383941;
-            background: #fff5f5;
-        }
-
-        .hospital-header {
-            height: 98px;
-            background: white;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 30px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .brand {
-            font-size: 28px;
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
-
-        .brand span { color: #ed464d; }
-
-        .brand-subtitle {
-            font-size: 12px;
-            color: #8a8b95;
-            letter-spacing: 1.5px;
-            margin-top: 4px;
-        }
-
-        .hospital-profile {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .hospital-avatar {
-            width: 50px;
-            height: 50px;
-            background: #ffe5e7;
-            color: #de343d;
-            border-radius: 14px;
-            display: grid;
-            place-items: center;
-            font-weight: bold;
-        }
-
-        .hospital-sidebar {
-            position: fixed;
-            top: 98px;
-            bottom: 0;
-            width: 300px;
-            background: white;
-            border-right: 1px solid #eee;
-            padding: 46px 22px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .sidebar-label {
-            font-size: 13px;
-            font-weight: bold;
-            color: #999aa4;
-            letter-spacing: 1px;
-            margin-bottom: 22px;
-        }
-
-        .nav-link {
-            display: block;
-            text-decoration: none;
-            padding: 18px;
-            border-radius: 12px;
-            color: #686975;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .nav-link.active {
-            background: #ffe5e7;
-            color: #e53e45;
-        }
-
-        .logout-area {
-            margin-top: auto;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-        }
-
-        .logout-button {
-            border: 0;
-            background: none;
-            font-weight: bold;
-            color: #868792;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .hospital-main {
-            margin-left: 300px;
-            padding: 34px 38px;
-            min-height: calc(100vh - 98px);
-        }
-
-        @media (max-width: 768px) {
-            .hospital-header {
-                padding: 12px 18px;
-                height: auto;
-            }
-
-            .brand { font-size: 21px; }
-
-            .brand-subtitle { font-size: 9px; }
-
-            .hospital-sidebar {
-                position: static;
-                width: 100%;
-                padding: 14px;
-            }
-
-            .hospital-main {
-                margin-left: 0;
-                padding: 20px;
-            }
-        }
-    </style>
-
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
-<body>
-<header class="hospital-header">
-    <div>
-        <div class="brand">
-            Emergency<span>Chain</span>
+
+<body class="min-h-screen bg-rose-50 text-slate-800">
+
+    <div class="min-h-screen lg:grid lg:grid-cols-[256px_minmax(0,1fr)]">
+
+        {{-- Sidebar desktop --}}
+        <div class="hidden bg-white lg:block">
+            @include('components.hospital.sidebar')
         </div>
-        <div class="brand-subtitle">
-            INTEGRATED RESPONSE SYSTEM
+
+        {{-- Area konten utama --}}
+        <div class="min-w-0">
+
+            {{-- Header --}}
+            <header
+                class="flex h-16 items-center justify-between
+                       border-b border-slate-100 bg-white
+                       px-4 sm:px-6 lg:h-20 lg:justify-end"
+            >
+
+                {{-- Brand mobile --}}
+                <a
+                    href="{{ route('hospital.referrals.index') }}"
+                    class="text-lg font-bold tracking-tight lg:hidden"
+                >
+                    Emergency<span class="text-red-500">Chain</span>
+                </a>
+
+                {{-- Profil Rumah Sakit --}}
+                <div class="flex items-center gap-3">
+                    <div class="hidden text-right sm:block">
+                        <p class="text-sm font-semibold text-slate-700">
+                            {{ auth()->user()->rumahSakit?->nama_rs ?? 'Rumah Sakit' }}
+                        </p>
+
+                        <p class="text-xs text-slate-400">
+                            Rumah Sakit
+                        </p>
+                    </div>
+
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-xs font-bold text-red-500">
+                        RS
+                    </div>
+                </div>
+
+            </header>
+
+            {{-- Navigasi mobile --}}
+            <nav class="flex items-center justify-between border-b border-slate-100 bg-white px-4 py-3 lg:hidden">
+                <a
+                    href="{{ route('hospital.referrals.index') }}"
+                    class="rounded-lg bg-red-100 px-4 py-2 text-sm font-semibold text-red-500"
+                >
+                    Dashboard RS
+                </a>
+
+                <button
+                    type="button"
+                    data-logout-open
+                    class="rounded-lg px-4 py-2 text-sm font-medium text-slate-500"
+                >
+                    Logout
+                </button>
+            </nav>
+
+            {{-- Konten halaman --}}
+            <main class="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+                @yield('content')
+            </main>
+
         </div>
     </div>
 
-    <div class="hospital-profile">
-        <div class="hospital-avatar">RS</div>
-        <div>
-            <strong>
-                {{ auth()->user()->rumahSakit?->nama_rs ?? 'Rumah Sakit' }}
-            </strong>
-            <div style="color:#92939b;font-size:13px;margin-top:5px">
-                Rumah Sakit
-            </div>
-        </div>
-    </div>
-</header>
+    {{-- Modal konfirmasi logout yang sama dengan Instansi --}}
+    @include('components.logout-modal')
 
-<aside class="hospital-sidebar">
-    <div class="sidebar-label">MENU UTAMA</div>
-
-    <a href="{{ route('hospital.referrals.index') }}"
-       class="nav-link {{ request()->routeIs('hospital.referrals.*') ? 'active' : '' }}">
-        ▦ &nbsp; Dashboard
-    </a>
-
-    <a href="{{ route('hospital.referrals.index') }}"
-       class="nav-link">
-        ♡ &nbsp; Status Emergency
-    </a>
-
-    <a href="{{ route('hospital.referrals.index') }}"
-       class="nav-link">
-        ▤ &nbsp; Riwayat Penanganan
-    </a>
-
-    <div class="logout-area">
-        <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button type="submit" class="logout-button">
-                ↪ &nbsp; Logout
-            </button>
-        </form>
-    </div>
-</aside>
-
-<main class="hospital-main">
-    @yield('content')
-</main>
 </body>
 </html>
