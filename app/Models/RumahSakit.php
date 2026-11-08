@@ -29,4 +29,13 @@ class RumahSakit extends Model
             'rumah_sakit_id'
         );
     }
+
+    public function referralRequests(): HasMany
+{
+    return $this->hasMany(
+        HospitalReferralRequest::class,
+        'rumah_sakit_id',
+        'rumah_sakit_id'
+    );
+}
 }
