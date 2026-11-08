@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class EmergencyCase extends Model
 {
@@ -66,4 +67,13 @@ class EmergencyCase extends Model
             'case_id'
         );
     }
+
+    public function hospitalReferral(): HasOne
+{
+    return $this->hasOne(
+        HospitalReferral::class,
+        'case_id',
+        'case_id'
+    );
+}
 }
