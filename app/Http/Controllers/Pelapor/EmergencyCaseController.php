@@ -10,6 +10,9 @@ use App\Services\Matching\ResourceMatchingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use App\Services\Hospital\HospitalReferralEligibilityService;
+use App\Services\Hospital\HospitalReferralService;
+use Illuminate\Support\Facades\Log;
 
 class EmergencyCaseController extends Controller
 {
@@ -23,16 +26,13 @@ class EmergencyCaseController extends Controller
     ): RedirectResponse {
         $data = $request->validated();
 
-        DB::transaction(function () use ($data, $request) {
-
-            // 1. Simpan lokasi kejadian.
+        $case = DB::transaction(function () use ($data, $request) {
             $lokasi = Lokasi::create([
                 'latitude' => $data['latitude'],
                 'longitude' => $data['longitude'],
                 'alamat' => $data['alamat'],
             ]);
 
-            // 2. Simpan Emergency Case.
             $case = EmergencyCase::create([
                 'lokasi_id' => $lokasi->lokasi_id,
                 'pengguna_id' => $request->user()->getAuthIdentifier(),
@@ -43,9 +43,31 @@ class EmergencyCaseController extends Controller
                 'status_laporan' => 'Menunggu',
             ]);
 
-            // 3. Jalankan Resource Matching otomatis.
+            // Resource Matching tetap berjalan otomatis.
             app(ResourceMatchingService::class)->match($case);
+
+            return $case;
         });
+
+        // Hospital Matching dijalankan setelah laporan tersimpan.
+        try {
+            $eligibility = app(
+                HospitalReferralEligibilityService::class
+            )->check($case);
+
+            if (
+                $eligibility ===
+                HospitalReferralEligibilityService::PERLU_RS
+            ) {
+                app(HospitalReferralService::class)
+                    ->start($case->case_id);
+            }
+        } catch (\Throwable $exception) {
+            Log::error('Hospital Matching otomatis gagal', [
+                'case_id' => $case->case_id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
 
         return redirect()
             ->route('pelapor.laporan.create')
@@ -54,4 +76,5 @@ class EmergencyCaseController extends Controller
                 'Laporan Emergency Case berhasil dibuat'
             );
     }
+    
 }
