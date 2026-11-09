@@ -7,6 +7,8 @@ use App\Models\EmergencyCase;
 use App\Models\Resource;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ResourceMatchingService
 {
@@ -152,6 +154,38 @@ class ResourceMatchingService
                 'missing' => $missing,
             ];
         });
+    }
+
+    /**
+     * Menjalankan matching ulang untuk seluruh Emergency Case
+     * yang masih menunggu Assignment.
+     */
+    public function rematchWaitingCases(): array
+    {
+        $waitingCases = EmergencyCase::query()
+            ->where('status_laporan', 'Menunggu Assignment')
+            ->orderBy('waktu_laporan')
+            ->orderBy('case_id')
+            ->get();
+
+        $results = [];
+
+        foreach ($waitingCases as $case) {
+            try {
+                $results[$case->case_id] = $this->match($case);
+            } catch (Throwable $exception) {
+                Log::error('Resource matching ulang gagal.', [
+                    'case_id' => $case->case_id,
+                    'error' => $exception->getMessage(),
+                ]);
+
+                $results[$case->case_id] = [
+                    'success' => false,
+                ];
+            }
+        }
+
+        return $results;
     }
 
     /**
