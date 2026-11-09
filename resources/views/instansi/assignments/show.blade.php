@@ -1123,52 +1123,25 @@
 
                         @csrf
                         @method('PATCH')
-
-
+                       
                         <div>
+                            <p class="block text-sm font-semibold text-slate-700">
+                                Status Berikutnya
+                            </p>
 
-                            <label
-                                for="status"
-                                class="block text-sm
-                                       font-semibold
-                                       text-slate-700"
-                            >
-                                Status berikutnya
-                            </label>
+                            <div class="mt-2 w-full rounded-lg border border-slate-200
+                                        bg-slate-50 px-3 py-3 text-sm font-semibold
+                                        text-slate-700">
+                                {{ $nextStatus['label'] }}
+                            </div>
 
-
-                            <select
-                                id="status"
+                            <input
+                                type="hidden"
                                 name="status"
-                                required
-                                class="mt-2 w-full
-                                       rounded-lg border
-                                       border-slate-200
-                                       bg-white px-3 py-3
-                                       text-sm text-slate-700
-                                       outline-none
-                                       focus:border-red-400
-                                       focus:ring-2
-                                       focus:ring-red-100"
+                                value="{{ $nextStatus['value'] }}"
                             >
-
-                                <option
-                                    value="{{
-                                        $nextStatus[
-                                            'value'
-                                        ]
-                                    }}"
-                                >
-                                    {{
-                                        $nextStatus[
-                                            'label'
-                                        ]
-                                    }}
-                                </option>
-
-                            </select>
-
                         </div>
+
 
 
                         <div>
