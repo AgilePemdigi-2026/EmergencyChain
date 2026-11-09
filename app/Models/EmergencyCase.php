@@ -21,8 +21,14 @@ class EmergencyCase extends Model
         'kebutuhan',
         'waktu_laporan',
         'status_laporan',
+        'hospital_referral_verification',
+        'hospital_referral_verified_by',
+        'hospital_referral_verified_at',
     ];
 
+    protected $casts = [
+        'hospital_referral_verified_at' => 'datetime',
+    ];
     public function pengguna(): BelongsTo
     {
         return $this->belongsTo(

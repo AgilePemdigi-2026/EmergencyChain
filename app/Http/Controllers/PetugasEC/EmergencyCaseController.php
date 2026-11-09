@@ -9,6 +9,9 @@ use Illuminate\View\View;
 use App\Http\Requests\UpdateEmergencyCaseRequest;
 use Illuminate\Http\RedirectResponse;
 use App\Services\Hospital\HospitalReferralEligibilityService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
+use App\Services\Hospital\HospitalReferralService;
 
 class EmergencyCaseController extends Controller
 {
@@ -82,6 +85,90 @@ class EmergencyCaseController extends Controller
             'petugas-ec.emergency-cases.hospital-matching',
             compact('case', 'referral', 'requests', 'eligibility')
         );
+    }
+
+    public function verifyHospitalReferral(
+        Request $request,
+        int $caseId
+    ): RedirectResponse {
+        abort_unless($request->user()?->role === 'petugas_ec', 403);
+
+        $validated = $request->validate([
+            'decision' => [
+                'required',
+                'in:perlu_rs,tidak_perlu_rs',
+            ],
+        ]);
+
+        $decision = $validated['decision'];
+
+        $case = DB::transaction(function () use (
+            $caseId,
+            $decision,
+            $request
+        ) {
+            $case = EmergencyCase::query()
+                ->where('case_id', $caseId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            // Verifikasi hanya berlaku untuk kasus yang ambigu.
+            $eligibility = app(
+                HospitalReferralEligibilityService::class
+            )->check($case);
+
+            if (
+                $eligibility !==
+                HospitalReferralEligibilityService::PERLU_VERIFIKASI
+            ) {
+                throw ValidationException::withMessages([
+                    'decision' => 'Kasus tidak sedang menunggu verifikasi.',
+                ]);
+            }
+
+            // Pastikan referral belum pernah dibuat.
+            if ($case->hospitalReferral()->exists()) {
+                throw ValidationException::withMessages([
+                    'decision' => 'Hospital Referral sudah pernah dibuat.',
+                ]);
+            }
+
+            $case->update([
+                'hospital_referral_verification' => $decision,
+                'hospital_referral_verified_by' =>
+                    $request->user()->getAuthIdentifier(),
+                'hospital_referral_verified_at' => now(),
+            ]);
+
+            return $case;
+        });
+
+        // Jalankan Hospital Matching hanya jika membutuhkan RS.
+        if (
+            $decision ===
+            HospitalReferralEligibilityService::PERLU_RS
+        ) {
+            app(HospitalReferralService::class)
+                ->start($case->case_id);
+
+            return redirect()
+                ->route('petugas.ec.cases.hospital-matching', [
+                    'caseId' => $case->case_id,
+                ])
+                ->with(
+                    'success',
+                    'Verifikasi berhasil. Hospital Matching telah dijalankan.'
+                );
+        }
+
+        return redirect()
+            ->route('petugas.ec.cases.hospital-matching', [
+                'caseId' => $case->case_id,
+            ])
+            ->with(
+                'success',
+                'Kasus telah diverifikasi dan tidak memerlukan rujukan Rumah Sakit.'
+            );
     }
 
 

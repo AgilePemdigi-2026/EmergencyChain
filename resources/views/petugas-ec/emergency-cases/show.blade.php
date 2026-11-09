@@ -633,33 +633,71 @@
 
                     </div>
 
+
                 {{-- Jika referral belum tersedia --}}
                 @else
 
-                    <div class="mt-4 rounded-lg p-4
-                        {{ $eligibility ===
-                            \App\Services\Hospital\HospitalReferralEligibilityService::TIDAK_PERLU_RS
-                                ? 'bg-slate-50'
-                                : 'bg-amber-50' }}">
+                    {{-- Keputusan manual Petugas EC: tidak memerlukan rujukan --}}
+                    @if (
+                        $case->hospital_referral_verification === 'tidak_perlu_rs'
+                    )
 
-                        @if (
-                            $eligibility ===
-                            \App\Services\Hospital\HospitalReferralEligibilityService::TIDAK_PERLU_RS
-                        )
+                        <div class="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 p-4">
+
+                            <p class="text-sm font-semibold text-emerald-700">
+                                Tidak Memerlukan Rujukan Rumah Sakit
+                            </p>
+
+                            <p class="mt-2 text-sm leading-relaxed text-emerald-700">
+                                Petugas EC telah memverifikasi kasus ini dan
+                                menetapkan bahwa korban tidak memerlukan rujukan
+                                ke Rumah Sakit. Hospital Matching tidak dijalankan.
+                            </p>
+
+                            <div class="mt-3 border-t border-emerald-200 pt-3">
+                                <p class="text-xs text-emerald-700">
+                                    Diverifikasi oleh:
+                                    <span class="font-semibold">
+                                        {{ $case->hospitalReferralVerifiedBy?->nama ?? 'Petugas EC' }}
+                                    </span>
+                                </p>
+
+                                <p class="mt-1 text-xs text-emerald-700">
+                                    Waktu verifikasi:
+                                    {{ $case->hospital_referral_verified_at
+                                        ? \Carbon\Carbon::parse($case->hospital_referral_verified_at)->format('d/m/Y H:i')
+                                        : '-' }}
+                                </p>
+                            </div>
+
+                        </div>
+
+                    {{-- Hasil pemeriksaan otomatis: tidak memerlukan rujukan --}}
+                    @elseif (
+                        $eligibility ===
+                        \App\Services\Hospital\HospitalReferralEligibilityService::TIDAK_PERLU_RS
+                    )
+
+                        <div class="mt-4 rounded-lg bg-slate-50 p-4">
 
                             <p class="text-sm font-semibold text-slate-700">
                                 Belum Membutuhkan Rujukan
                             </p>
 
                             <p class="mt-2 text-sm text-slate-500">
-                                Berdasarkan informasi laporan, belum terdapat
-                                indikasi kebutuhan rujukan ke Rumah Sakit.
+                                Berdasarkan pemeriksaan informasi laporan,
+                                belum terdapat indikasi kebutuhan rujukan
+                                ke Rumah Sakit.
                             </p>
 
-                        @elseif (
-                            $eligibility ===
-                            \App\Services\Hospital\HospitalReferralEligibilityService::PERLU_RS
-                        )
+                        </div>
+
+                    @elseif (
+                        $eligibility ===
+                        \App\Services\Hospital\HospitalReferralEligibilityService::PERLU_RS
+                    )
+
+                        <div class="mt-4 rounded-lg bg-amber-50 p-4">
 
                             <p class="text-sm font-semibold text-amber-700">
                                 Proses Rujukan Belum Dimulai
@@ -670,7 +708,11 @@
                                 tetapi belum terdapat data referral.
                             </p>
 
-                        @else
+                        </div>
+
+                    @else
+
+                        <div class="mt-4 rounded-lg bg-amber-50 p-4">
 
                             <p class="text-sm font-semibold text-amber-700">
                                 Perlu Verifikasi
@@ -682,11 +724,12 @@
                                 Petugas EC.
                             </p>
 
-                        @endif
+                        </div>
 
-                    </div>
+                    @endif
 
                 @endif
+
 
                 {{-- Riwayat Permintaan Rumah Sakit --}}
                 <div class="mt-5 border-t border-slate-100 pt-4">
