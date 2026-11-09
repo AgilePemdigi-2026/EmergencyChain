@@ -86,6 +86,21 @@ class MasterDataSeeder extends Seeder
             ]
         );
 
+        // RS Universitas Airlangga (Simulasi)
+        $rsUnair = RumahSakit::firstOrCreate(
+            [
+                'nama_rs' => 'RS Universitas Airlangga',
+            ],
+            [
+                'alamat' => 'Jl. Dharmahusada Permai, Mulyorejo, Surabaya, Jawa Timur 60115',
+                'latitude' => -7.26970931,
+                'longitude' => 112.78482274,
+                'kapasitas' => 100,
+                'kapasitas_tersedia' => 80,
+                'status' => 'aktif',
+            ]
+        );
+
 
         // ==========================================
         // 3. DATA LOKASI PANGKALAN RESOURCE
@@ -257,6 +272,15 @@ class MasterDataSeeder extends Seeder
                 'email' => 'rs@emergencychain.test',
                 'role' => 'rumah_sakit',
                 'rumah_sakit_id' => $rs->rumah_sakit_id,
+            ],
+
+            // Akun RS Universitas Airlangga
+            [
+                'nama' => 'Petugas RS Universitas Airlangga',
+                'no_telp' => '081200000016',
+                'email' => 'rs.unair@emergencychain.test',
+                'role' => 'rumah_sakit',
+                'rumah_sakit_id' => $rsUnair->rumah_sakit_id,
             ],
 
             // Akun Pelapor

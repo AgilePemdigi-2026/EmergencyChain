@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 use App\Http\Requests\UpdateEmergencyCaseRequest;
 use Illuminate\Http\RedirectResponse;
+use App\Services\Hospital\HospitalReferralEligibilityService;
 
 class EmergencyCaseController extends Controller
 {
@@ -32,10 +33,25 @@ class EmergencyCaseController extends Controller
             'pengguna',
             'lokasi',
             'assignments.resource',
+            'hospitalReferral.acceptedHospital',
+            'hospitalReferral.requests.rumahSakit',
         ])->findOrFail($caseId);
+
+        $eligibility = app(
+            HospitalReferralEligibilityService::class
+        )->check($case);
+
+        $referral = $case->hospitalReferral;
+
+        $requests = $referral
+            ? $referral->requests->sortBy('attempt_order')
+            : collect();
 
         return view('petugas-ec.emergency-cases.show', [
             'case' => $case,
+            'referral' => $referral,
+            'requests' => $requests,
+            'eligibility' => $eligibility,
         ]);
     }
 
@@ -45,13 +61,29 @@ class EmergencyCaseController extends Controller
     ): View {
         abort_unless($request->user()?->role === 'petugas_ec', 403);
 
-        $case = EmergencyCase::findOrFail($caseId);
+        $case = EmergencyCase::with([
+            'pengguna',
+            'lokasi',
+            'hospitalReferral.acceptedHospital',
+            'hospitalReferral.requests.rumahSakit',
+        ])->findOrFail($caseId);
+
+        $eligibility = app(
+            HospitalReferralEligibilityService::class
+        )->check($case);
+
+        $referral = $case->hospitalReferral;
+
+        $requests = $referral
+            ? $referral->requests->sortBy('attempt_order')
+            : collect();
 
         return view(
-            'petugas-ec.emergency-cases.hospital-matching-placeholder',
-            compact('case')
+            'petugas-ec.emergency-cases.hospital-matching',
+            compact('case', 'referral', 'requests', 'eligibility')
         );
     }
+
 
     public function update(
         UpdateEmergencyCaseRequest $request,
