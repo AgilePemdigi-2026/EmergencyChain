@@ -508,28 +508,254 @@
 
             </section>
 
-
             {{-- Rumah Sakit Tujuan --}}
             <section class="rounded-xl border border-slate-100
                             bg-white p-5 shadow-sm">
 
-                <h2 class="text-sm font-semibold text-slate-700">
-                    Rumah Sakit Tujuan
-                </h2>
+                @php
+                    $activeRequest = $requests->firstWhere(
+                        'status',
+                        'menunggu'
+                    );
 
-                <p class="mt-3 text-sm font-medium text-slate-500">
-                    Belum ditentukan
-                </p>
+                    $referralStatus = [
+                        'mencari' => [
+                            'label' => 'Sedang Mencari',
+                            'class' => 'bg-amber-100 text-amber-700',
+                        ],
+                        'diterima' => [
+                            'label' => 'Diterima',
+                            'class' => 'bg-emerald-100 text-emerald-700',
+                        ],
+                        'gagal' => [
+                            'label' => 'Gagal',
+                            'class' => 'bg-red-100 text-red-700',
+                        ],
+                    ];
 
-                <p class="mt-2 text-xs leading-relaxed text-slate-400">
-                    Informasi rumah sakit akan tersedia setelah
-                    proses Hospital Matching diintegrasikan.
-                </p>
+                    $requestStatus = [
+                        'menunggu' => 'bg-amber-100 text-amber-700',
+                        'diterima' => 'bg-emerald-100 text-emerald-700',
+                        'ditolak' => 'bg-red-100 text-red-700',
+                        'timeout' => 'bg-slate-100 text-slate-600',
+                    ];
+                @endphp
+
+                <div class="flex flex-wrap items-center
+                            justify-between gap-3">
+
+                    <h2 class="text-sm font-semibold text-slate-700">
+                        Rumah Sakit Tujuan
+                    </h2>
+
+                    @if ($referral)
+                        <span class="rounded-full px-3 py-1 text-xs
+                                    font-semibold
+                                    {{ $referralStatus[$referral->status]['class']
+                                        ?? 'bg-slate-100 text-slate-600' }}">
+                            {{ $referralStatus[$referral->status]['label']
+                                ?? ucfirst($referral->status) }}
+                        </span>
+                    @endif
+
+                </div>
+
+                {{-- Jika rumah sakit sudah menerima --}}
+                @if ($referral?->status === 'diterima')
+
+                    <div class="mt-4 rounded-lg bg-emerald-50 p-4">
+
+                        <p class="text-sm font-semibold text-emerald-700">
+                            Rumah Sakit Tujuan Telah Ditetapkan
+                        </p>
+
+                        <p class="mt-2 text-base font-semibold text-slate-700">
+                            {{ $referral->acceptedHospital?->nama_rs
+                                ?? 'Data rumah sakit tidak tersedia' }}
+                        </p>
+
+                        <p class="mt-1 text-sm text-slate-500">
+                            {{ $referral->acceptedHospital?->alamat
+                                ?? 'Alamat tidak tersedia' }}
+                        </p>
+
+                    </div>
+
+                {{-- Jika masih mencari rumah sakit --}}
+                @elseif ($referral?->status === 'mencari')
+
+                    <div class="mt-4 rounded-lg bg-amber-50 p-4">
+
+                        <p class="text-sm font-semibold text-amber-700">
+                            Menunggu Respons Rumah Sakit
+                        </p>
+
+                        @if ($activeRequest)
+
+                            <p class="mt-2 text-sm text-slate-700">
+                                Permintaan saat ini dikirim kepada:
+                            </p>
+
+                            <p class="mt-1 font-semibold text-slate-700">
+                                {{ $activeRequest->rumahSakit?->nama_rs
+                                    ?? 'Rumah Sakit tidak tersedia' }}
+                            </p>
+
+                            <p class="mt-2 text-xs text-slate-500">
+                                Batas respons:
+                                {{ $activeRequest->expires_at?->format('d/m/Y H:i')
+                                    ?? '-' }}
+                            </p>
+
+                        @else
+
+                            <p class="mt-2 text-sm text-slate-600">
+                                Sistem sedang memproses pencarian rumah sakit.
+                            </p>
+
+                        @endif
+
+                    </div>
+
+                {{-- Jika semua proses rujukan gagal --}}
+                @elseif ($referral?->status === 'gagal')
+
+                    <div class="mt-4 rounded-lg bg-red-50 p-4">
+
+                        <p class="text-sm font-semibold text-red-700">
+                            Rumah Sakit Tujuan Belum Ditemukan
+                        </p>
+
+                        <p class="mt-2 text-sm text-red-600">
+                            {{ $referral->failure_reason
+                                ?? 'Tidak ada rumah sakit yang dapat menerima rujukan.' }}
+                        </p>
+
+                    </div>
+
+                {{-- Jika referral belum tersedia --}}
+                @else
+
+                    <div class="mt-4 rounded-lg p-4
+                        {{ $eligibility ===
+                            \App\Services\Hospital\HospitalReferralEligibilityService::TIDAK_PERLU_RS
+                                ? 'bg-slate-50'
+                                : 'bg-amber-50' }}">
+
+                        @if (
+                            $eligibility ===
+                            \App\Services\Hospital\HospitalReferralEligibilityService::TIDAK_PERLU_RS
+                        )
+
+                            <p class="text-sm font-semibold text-slate-700">
+                                Belum Membutuhkan Rujukan
+                            </p>
+
+                            <p class="mt-2 text-sm text-slate-500">
+                                Berdasarkan informasi laporan, belum terdapat
+                                indikasi kebutuhan rujukan ke Rumah Sakit.
+                            </p>
+
+                        @elseif (
+                            $eligibility ===
+                            \App\Services\Hospital\HospitalReferralEligibilityService::PERLU_RS
+                        )
+
+                            <p class="text-sm font-semibold text-amber-700">
+                                Proses Rujukan Belum Dimulai
+                            </p>
+
+                            <p class="mt-2 text-sm text-amber-600">
+                                Kebutuhan rujukan telah teridentifikasi,
+                                tetapi belum terdapat data referral.
+                            </p>
+
+                        @else
+
+                            <p class="text-sm font-semibold text-amber-700">
+                                Perlu Verifikasi
+                            </p>
+
+                            <p class="mt-2 text-sm text-amber-600">
+                                Kebutuhan rujukan belum dapat dipastikan
+                                dari informasi laporan. Diperlukan verifikasi
+                                Petugas EC.
+                            </p>
+
+                        @endif
+
+                    </div>
+
+                @endif
+
+                {{-- Riwayat Permintaan Rumah Sakit --}}
+                <div class="mt-5 border-t border-slate-100 pt-4">
+
+                    <h3 class="text-sm font-semibold text-slate-700">
+                        Riwayat Permintaan Rumah Sakit
+                    </h3>
+
+                    <p class="mt-1 text-xs text-slate-400">
+                        Daftar Rumah Sakit yang telah menerima permintaan
+                        rujukan dari sistem.
+                    </p>
+
+                    @forelse ($requests as $hospitalRequest)
+
+                        <div class="mt-4 flex flex-col gap-2
+                                    border-b border-slate-100 pb-4
+                                    last:border-0 last:pb-0">
+
+                            <div class="flex flex-wrap items-center
+                                        justify-between gap-2">
+
+                                <p class="text-sm font-semibold text-slate-700">
+                                    {{ $hospitalRequest->rumahSakit?->nama_rs
+                                        ?? 'Rumah Sakit tidak tersedia' }}
+                                </p>
+
+                                <span class="rounded-full px-2 py-1
+                                            text-xs font-semibold
+                                            {{ $requestStatus[$hospitalRequest->status]
+                                                ?? 'bg-slate-100 text-slate-600' }}">
+
+                                    {{ ucfirst($hospitalRequest->status) }}
+
+                                </span>
+
+                            </div>
+
+                            <p class="text-xs text-slate-400">
+                                Percobaan ke-{{ $hospitalRequest->attempt_order }}
+                                ·
+                                {{ $hospitalRequest->requested_at?->format('d/m/Y H:i')
+                                    ?? '-' }}
+                            </p>
+
+                            @if ($hospitalRequest->rejection_reason)
+
+                                <p class="text-xs text-red-500">
+                                    Alasan penolakan:
+                                    {{ $hospitalRequest->rejection_reason }}
+                                </p>
+
+                            @endif
+
+                        </div>
+
+                    @empty
+
+                        <p class="mt-3 text-sm text-slate-400">
+                            Belum ada permintaan Rumah Sakit yang tercatat.
+                        </p>
+
+                    @endforelse
+
+                </div>
 
             </section>
 
         </aside>
-
 
     </div>
 </div>
