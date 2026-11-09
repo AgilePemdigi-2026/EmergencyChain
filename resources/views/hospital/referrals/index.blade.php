@@ -1,297 +1,310 @@
+
 @extends('layouts.hospital')
 
 @section('title', 'Dashboard Rumah Sakit - EmergencyChain')
 
-@push('styles')
-<style>
-    .dashboard-label {
-        color: #477ce4;
-        font-weight: bold;
-        letter-spacing: 2px;
-        margin: 0 0 10px;
-    }
-
-    .dashboard-title {
-        font-size: 36px;
-        font-weight: 500;
-        margin: 0 0 30px;
-    }
-
-    .hospital-stats {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 14px;
-        margin-bottom: 28px;
-    }
-
-    .stat-card {
-        background: white;
-        border: 1px solid #f0e4e4;
-        border-radius: 14px;
-        padding: 22px 16px;
-    }
-
-    .stat-card .label {
-        color: #777985;
-        font-size: 12px;
-    }
-
-    .stat-card .number {
-        font-size: 28px;
-        font-weight: bold;
-        margin-top: 6px;
-    }
-
-    .incoming-panel {
-        background: white;
-        border: 1px solid #f0e4e4;
-        border-radius: 16px;
-        overflow: hidden;
-    }
-
-    .panel-heading {
-        padding: 20px;
-        border-bottom: 1px solid #eee;
-    }
-
-    .case-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        padding: 14px;
-    }
-
-    .case-card {
-        border: 1px solid #f1e4e4;
-        border-radius: 12px;
-        padding: 16px;
-    }
-
-    .case-number {
-        color: #477ce4;
-        font-weight: bold;
-        font-size: 13px;
-    }
-
-    .case-type {
-        margin: 14px 0;
-        font-size: 15px;
-    }
-
-    .case-info {
-        background: #fff5f5;
-        border-radius: 8px;
-        padding: 12px;
-        margin-top: 12px;
-        font-size: 13px;
-    }
-
-    .case-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 14px;
-        align-items: center;
-    }
-
-    .case-actions form {
-        display: inline;
-    }
-
-    .btn {
-        padding: 10px 13px;
-        border-radius: 9px;
-        border: 0;
-        font-weight: bold;
-        cursor: pointer;
-    }
-
-    .btn-accept {
-        background: #e9444b;
-        color: white;
-    }
-
-    .btn-reject {
-        background: #fff0f1;
-        color: #dc3540;
-    }
-
-    .btn-detail {
-        background: #f5f1f1;
-        color: #555;
-        text-decoration: none;
-        display: inline-block;
-    }
-
-    .status-label {
-        color: #6b7280;
-        font-size: 12px;
-    }
-
-    .alert-success {
-        padding: 12px;
-        background: #dcfce7;
-        border-radius: 8px;
-        margin-bottom: 16px;
-    }
-
-    .alert-error {
-        padding: 12px;
-        background: #fee2e2;
-        border-radius: 8px;
-        margin-bottom: 16px;
-    }
-
-    @media (max-width: 1050px) {
-        .hospital-stats {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-        .case-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @media (max-width: 550px) {
-        .hospital-stats {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-@endpush
-
 @section('content')
-<p class="dashboard-label">
-    {{ strtoupper(auth()->user()->rumahSakit?->nama_rs ?? 'RUMAH SAKIT') }}
-</p>
+<div class="space-y-7">
 
-<h1 class="dashboard-title">Dashboard Rumah Sakit</h1>
+    {{-- JUDUL DASHBOARD --}}
+    <div>
+        <p class="text-xs font-bold uppercase tracking-[0.2em] text-blue-500">
+            {{ auth()->user()->rumahSakit?->nama_rs ?? 'Rumah Sakit' }}
+        </p>
 
-@if(session('success'))
-    <div class="alert-success">{{ session('success') }}</div>
-@endif
+        <h1 class="mt-2 text-3xl font-semibold text-slate-800">
+            Dashboard Rumah Sakit
+        </h1>
 
-@if($errors->any())
-    <div class="alert-error">
-        @foreach($errors->all() as $error)
-            <p>{{ $error }}</p>
-        @endforeach
-    </div>
-@endif
-
-<div class="hospital-stats">
-    <div class="stat-card">
-        <div class="label">Incoming Cases</div>
-        <div class="number">{{ $stats['incoming'] }}</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="label">Menunggu Penerimaan</div>
-        <div class="number">{{ $stats['waiting'] }}</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="label">Diterima Hari Ini</div>
-        <div class="number">{{ $stats['accepted_today'] }}</div>
-    </div>
-
-    <div class="stat-card">
-        <div class="label">Ditolak</div>
-        <div class="number">{{ $stats['rejected'] }}</div>
-    </div>
-</div>
-
-<section class="incoming-panel">
-    <div class="panel-heading">
-        <strong>Incoming Emergency Cases</strong>
-        <p class="status-label">
-            Kasus rujukan yang membutuhkan konfirmasi penerimaan
+        <p class="mt-2 text-sm text-slate-500">
+            Pantau dan konfirmasi permintaan rujukan pasien dari EmergencyChain.
         </p>
     </div>
 
-    <div class="case-grid">
-        @forelse($requests as $referralRequest)
-            @php
-                $isActive = $referralRequest->status === 'menunggu'
-                    && $referralRequest->expires_at->isFuture();
-            @endphp
+    {{-- NOTIFIKASI --}}
+    @if(session('success'))
+        <div class="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+            {{ session('success') }}
+        </div>
+    @endif
 
-            <article class="case-card">
-                <div class="case-number">
-                    EC-{{ str_pad(
-                        $referralRequest->referral->case_id,
-                        4,
-                        '0',
-                        STR_PAD_LEFT
-                    ) }}
-                </div>
+    @if($errors->any())
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+            @foreach($errors->all() as $error)
+                <p>{{ $error }}</p>
+            @endforeach
+        </div>
+    @endif
 
-                <p class="case-type">
-                    Permintaan Rujukan #{{ $referralRequest->id }}
+    {{-- KARTU STATISTIK --}}
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+
+        <div class="flex items-center gap-4 rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-500">
+                <svg class="h-6 w-6" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="4" width="16" height="16" rx="3"/>
+                    <path d="M12 8v8M8 12h8"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-slate-500">Incoming Cases</p>
+                <p class="mt-1 text-3xl font-bold text-slate-800">
+                    {{ $stats['incoming'] }}
                 </p>
+                <p class="text-xs text-slate-400">Total permintaan masuk</p>
+            </div>
+        </div>
 
-                <p class="status-label">
-                    Status: {{ ucfirst($referralRequest->status) }}
+        <div class="flex items-center gap-4 rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                <svg class="h-6 w-6" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="9"/>
+                    <path d="M12 7v5l3 2"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-slate-500">Menunggu Penerimaan</p>
+                <p class="mt-1 text-3xl font-bold text-slate-800">
+                    {{ $stats['waiting'] }}
                 </p>
+                <p class="text-xs text-slate-400">Perlu konfirmasi</p>
+            </div>
+        </div>
 
-                <div class="case-info">
-                    <strong>Permintaan Rumah Sakit</strong>
-                    <p>
-                        Percobaan ke-{{ $referralRequest->attempt_order }}
-                    </p>
-                    <p>
-                        Batas respons:
-                        {{ $referralRequest->expires_at->format('H:i:s') }}
-                    </p>
-                </div>
-                <a href="{{ route('hospital.referrals.show', $referralRequest->id) }}"
-                class="btn btn-detail">
-                Lihat Detail
-            </a>
+        <div class="flex items-center gap-4 rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <svg class="h-6 w-6" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="m5 12 4 4L19 6"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-slate-500">Diterima Hari Ini</p>
+                <p class="mt-1 text-3xl font-bold text-slate-800">
+                    {{ $stats['accepted_today'] }}
+                </p>
+                <p class="text-xs text-slate-400">Rujukan diterima</p>
+            </div>
+        </div>
 
-                @if($isActive)
-                    <div class="case-actions">
-                        <form method="POST"
-                              action="{{ route(
-                                  'hospital.referrals.respond',
-                                  $referralRequest->id
-                              ) }}">
-                            @csrf
-                            <input type="hidden"
-                                   name="decision"
-                                   value="ditolak">
-                            <button type="submit" class="btn btn-reject">
-                                Tolak
-                            </button>
-                        </form>
+        <div class="flex items-center gap-4 rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+                <svg class="h-6 w-6" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="1.8"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 6l12 12M18 6 6 18"/>
+                </svg>
+            </div>
+            <div>
+                <p class="text-xs font-medium text-slate-500">Ditolak</p>
+                <p class="mt-1 text-3xl font-bold text-slate-800">
+                    {{ $stats['rejected'] }}
+                </p>
+                <p class="text-xs text-slate-400">Total penolakan</p>
+            </div>
+        </div>
 
-                        <form method="POST"
-                              action="{{ route(
-                                  'hospital.referrals.respond',
-                                  $referralRequest->id
-                              ) }}">
-                            @csrf
-                            <input type="hidden"
-                                   name="decision"
-                                   value="diterima">
-                            <button type="submit" class="btn btn-accept">
-                                Terima
-                            </button>
-                        </form>
+    </div>
+
+    {{-- DAFTAR PERMINTAAN --}}
+    <section class="overflow-hidden rounded-2xl border border-rose-100 bg-white shadow-sm">
+
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+            <div>
+                <h2 class="font-semibold text-slate-800">
+                    Incoming Emergency Cases
+                </h2>
+                <p class="mt-1 text-xs text-slate-400">
+                    Permintaan aktif ditampilkan terlebih dahulu, diikuti riwayat.
+                </p>
+            </div>
+
+            <span class="rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-600">
+                {{ $stats['waiting'] }} Menunggu
+            </span>
+        </div>
+
+        <div class="grid items-stretch gap-4 p-4 md:grid-cols-2">
+
+            @forelse($requests as $referralRequest)
+
+                @php
+                    $caseId = $referralRequest->referral?->case_id;
+                    $case = $casesById->get($caseId);
+
+                    $isActive =
+                        $referralRequest->status === 'menunggu'
+                        && $referralRequest->referral?->status === 'mencari'
+                        && $referralRequest->expires_at->isFuture();
+
+                    $isExpired =
+                        $referralRequest->status === 'menunggu'
+                        && !$isActive;
+
+                    $statusText = match (true) {
+                        $isActive => 'Menunggu Konfirmasi',
+                        $isExpired => 'Lewat Batas Waktu',
+                        $referralRequest->status === 'diterima' => 'Diterima',
+                        $referralRequest->status === 'ditolak' => 'Ditolak',
+                        $referralRequest->status === 'timeout' => 'Timeout',
+                        default => ucfirst($referralRequest->status),
+                    };
+
+                    $statusClass = match (true) {
+                        $isActive => 'bg-amber-50 text-amber-700',
+                        $referralRequest->status === 'diterima' => 'bg-emerald-50 text-emerald-700',
+                        $isExpired => 'bg-slate-100 text-slate-600',
+                        $referralRequest->status === 'ditolak' => 'bg-red-50 text-red-600',
+                        $referralRequest->status === 'timeout' => 'bg-slate-100 text-slate-600',
+                        default => 'bg-slate-100 text-slate-600',
+                    };
+                @endphp
+
+                <article class="flex h-full flex-col rounded-xl border border-slate-200 p-4 transition hover:border-rose-200 hover:shadow-sm">
+
+                    {{-- STATUS --}}
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">
+                            {{ $statusText }}
+                        </span>
+
+                        <span class="text-xs text-slate-400">
+                            Percobaan ke-{{ $referralRequest->attempt_order }}
+                        </span>
                     </div>
-                @else
-                    <p class="status-label">
-                        Permintaan sudah tidak aktif.
-                    </p>
-                @endif
-            </article>
-        @empty
-            <p style="padding:16px">
-                Belum ada permintaan rujukan.
-            </p>
-        @endforelse
-    </div>
 
-    <div style="padding:16px">
-        {{ $requests->links() }}
-    </div>
-</section>
+                    {{-- NOMOR CASE --}}
+                    <p class="mt-4 text-xs font-bold text-blue-500">
+                        EC-{{ str_pad($caseId ?? 0, 4, '0', STR_PAD_LEFT) }}
+                    </p>
+
+                    {{-- JENIS KEJADIAN --}}
+                    <h3 class="mt-2 text-base font-semibold text-slate-800">
+                        {{ $case?->jenis_kejadian ?? 'Jenis kejadian belum tersedia' }}
+                    </h3>
+
+                    {{-- IDENTITAS PERMINTAAN --}}
+                    <p class="mt-1 text-xs text-slate-400">
+                        Permintaan Rujukan #{{ $referralRequest->id }}
+                    </p>
+
+                    {{-- LOKASI --}}
+                    <div class="mt-3 flex items-start gap-2 text-sm text-slate-500">
+                        <svg class="mt-0.5 h-4 w-4 shrink-0"
+                             viewBox="0 0 24 24"
+                             fill="none" stroke="currentColor"
+                             stroke-width="1.8"
+                             stroke-linecap="round"
+                             stroke-linejoin="round">
+                            <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/>
+                            <circle cx="12" cy="10" r="2.5"/>
+                        </svg>
+
+                        <span>
+                            {{ $case?->lokasi?->alamat ?? 'Lokasi belum tersedia' }}
+                        </span>
+                    </div>
+
+                    {{-- KEBUTUHAN PASIEN --}}
+                    <div class="mt-4 rounded-lg bg-rose-50 p-3">
+                        <p class="text-xs text-slate-400">
+                            Kebutuhan Pasien
+                        </p>
+
+                        <p class="mt-1 text-sm font-semibold text-slate-700">
+                            {{ $case?->kebutuhan ?: 'Belum ada keterangan kebutuhan' }}
+                        </p>
+                    </div>
+
+                    {{-- WAKTU --}}
+                    <div class="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                        <span>
+                            Dikirim:
+                            {{ $referralRequest->requested_at->format('d M, H:i') }}
+                        </span>
+
+                        <span class="{{ $isActive ? 'font-semibold text-red-500' : '' }}">
+                            Batas:
+                            {{ $referralRequest->expires_at->format('H:i:s') }}
+                        </span>
+                    </div>
+
+                    {{-- TOMBOL --}}
+                    <div class="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+
+                        <a
+                            href="{{ route('hospital.referrals.show', $referralRequest->id) }}"
+                            class="inline-flex items-center justify-center rounded-lg bg-slate-100 px-4 py-2.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200"
+                        >
+                            Lihat Detail
+                        </a>
+
+                        @if($isActive)
+                            <div class="flex items-center gap-2">
+
+                                <form
+                                    method="POST"
+                                    action="{{ route('hospital.referrals.respond', $referralRequest->id) }}"
+                                >
+                                    @csrf
+                                    <input type="hidden" name="decision" value="ditolak">
+
+                                    <button
+                                        type="submit"
+                                        class="rounded-lg border border-red-100 bg-red-50 px-4 py-2.5 text-xs font-semibold text-red-600 transition hover:bg-red-100"
+                                    >
+                                        Tolak
+                                    </button>
+                                </form>
+
+                                <form
+                                    method="POST"
+                                    action="{{ route('hospital.referrals.respond', $referralRequest->id) }}"
+                                >
+                                    @csrf
+                                    <input type="hidden" name="decision" value="diterima">
+
+                                    <button
+                                        type="submit"
+                                        class="rounded-lg bg-red-500 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-red-600"
+                                    >
+                                        Terima
+                                    </button>
+                                </form>
+
+                            </div>
+                        @else
+                            <span class="text-xs text-slate-400">
+                                Tidak memerlukan respons
+                            </span>
+                        @endif
+
+                    </div>
+                </article>
+
+            @empty
+                <div class="col-span-full py-12 text-center">
+                    <p class="text-sm font-medium text-slate-600">
+                        Belum ada permintaan rujukan.
+                    </p>
+                    <p class="mt-2 text-xs text-slate-400">
+                        Permintaan dari sistem Hospital Matching akan muncul di sini.
+                    </p>
+                </div>
+            @endforelse
+
+        </div>
+
+        <div class="px-5 pb-5">
+            {{ $requests->links() }}
+        </div>
+
+    </section>
+</div>
 @endsection

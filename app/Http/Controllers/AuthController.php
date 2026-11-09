@@ -64,6 +64,7 @@ class AuthController extends Controller
         }
 
         $request->session()->regenerate();
+
         return match (Auth::user()->role) {
             'pelapor' => redirect()
                 ->route('pelapor.laporan.create'),
@@ -75,7 +76,7 @@ class AuthController extends Controller
                 ->route('instansi.assignments.index'),
 
             'rumah_sakit' => redirect()
-             ->route('hospital.referrals.index'),
+                ->route('hospital.referrals.index'),
 
             default => abort(
                 403,

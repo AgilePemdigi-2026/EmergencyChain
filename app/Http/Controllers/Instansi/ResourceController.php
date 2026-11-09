@@ -168,13 +168,8 @@ class ResourceController extends Controller
                 'success',
                 'Unit berhasil ditambahkan.'
             );
-
-        
-    }
-
-    public function update(Request $request, int $resourceId)
-    {
-        $resource = $this->ownedResource($request, $resourceId);
+            }public function update(Request $request, int $resourceId)
+            {$resource = $this->ownedResource($request, $resourceId);
 
         // Unit yang sedang mendapat assignment tidak boleh diedit.
         if ($resource->status_ketersediaan === Resource::STATUS_DITUGASKAN) {
