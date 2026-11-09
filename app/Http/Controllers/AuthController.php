@@ -74,6 +74,9 @@ class AuthController extends Controller
             'instansi' => redirect()
                 ->route('instansi.assignments.index'),
 
+            'rumah_sakit' => redirect()
+             ->route('hospital.referrals.index'),
+
             default => abort(
                 403,
                 'Halaman untuk role akun ini belum tersedia.'
