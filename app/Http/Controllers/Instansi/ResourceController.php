@@ -8,9 +8,13 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use App\Services\Matching\ResourceMatchingService;
 
 class ResourceController extends Controller
 {
+    public function __construct(
+        private ResourceMatchingService $matchingService
+    ) {}
 
     public function index(Request $request): View
     {
@@ -149,12 +153,23 @@ class ResourceController extends Controller
             'status_ketersediaan' => $validated['status_ketersediaan'],
         ]);
 
+
+        // Jalankan matching ulang jika unit baru tersedia.
+        if (
+            $validated['status_ketersediaan']
+            === Resource::STATUS_TERSEDIA
+        ) {
+            $this->matchingService->rematchWaitingCases();
+        }
+
         return redirect()
             ->route('instansi.units.index')
             ->with(
                 'success',
                 'Unit berhasil ditambahkan.'
             );
+
+        
     }
 
     public function update(Request $request, int $resourceId)
@@ -215,6 +230,14 @@ class ResourceController extends Controller
             'status_ketersediaan' =>
                 $validated['status_ketersediaan'],
         ]);
+
+        // Jalankan matching ulang ketika unit tersedia.
+        if (
+            $validated['status_ketersediaan']
+            === Resource::STATUS_TERSEDIA
+        ) {
+            $this->matchingService->rematchWaitingCases();
+        }
 
         return back()->with(
             'success',

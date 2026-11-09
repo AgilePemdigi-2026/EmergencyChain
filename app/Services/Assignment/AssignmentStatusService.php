@@ -9,8 +9,6 @@ use App\Models\Resource;
 use App\Models\StatusPenanganan;
 use App\Services\Matching\ResourceMatchingService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class AssignmentStatusService
 {
@@ -131,7 +129,7 @@ class AssignmentStatusService
         // Jalankan matching ulang jika resource kembali tersedia.
         if ($result['resource_released']) {
             $result['rematching'] =
-                $this->rematchWaitingCases();
+                $this->matchingService->rematchWaitingCases();
         }
 
         return $result;
@@ -219,46 +217,5 @@ class AssignmentStatusService
         ]);
     }
 
-    /**
-     * Mencoba matching ulang Case yang masih
-     * menunggu Assignment.
-     */
-    private function rematchWaitingCases(): array
-    {
-        $waitingCases = EmergencyCase::query()
-            ->where(
-                'status_laporan',
-                'Menunggu Assignment'
-            )
-            ->orderBy('waktu_laporan')
-            ->orderBy('case_id')
-            ->get();
 
-        $results = [];
-
-        foreach ($waitingCases as $case) {
-            try {
-
-                $results[$case->case_id] =
-                    $this->matchingService->match($case);
-
-            } catch (Throwable $exception) {
-
-                Log::error(
-                    'Resource matching ulang gagal.',
-                    [
-                        'case_id' => $case->case_id,
-                        'error' =>
-                            $exception->getMessage(),
-                    ]
-                );
-
-                $results[$case->case_id] = [
-                    'success' => false,
-                ];
-            }
-        }
-
-        return $results;
-    }
 }

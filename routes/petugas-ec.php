@@ -23,6 +23,12 @@ Route::middleware('auth')->group(function () {
     )->whereNumber('caseId')
     ->name('petugas.ec.cases.update');
 
+    Route::post(
+        '/petugas-ec/emergency-cases/{caseId}/hospital-verification',
+        [EmergencyCaseController::class, 'verifyHospitalReferral']
+    )->whereNumber('caseId')
+    ->name('petugas.ec.cases.hospital-verification');
+
     Route::get(
         '/petugas-ec/emergency-cases/{caseId}/resource-matching',
         [ResourceMatchingController::class, 'show']

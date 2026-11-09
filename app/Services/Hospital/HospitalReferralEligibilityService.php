@@ -12,11 +12,24 @@ class HospitalReferralEligibilityService
 
     public function check(EmergencyCase $case): string
     {
+        // Gunakan keputusan Petugas EC jika sudah diverifikasi.
+        if (
+            in_array(
+                $case->hospital_referral_verification,
+                [
+                    self::PERLU_RS,
+                    self::TIDAK_PERLU_RS,
+                ],
+                true
+            )
+        ) {
+            return $case->hospital_referral_verification;
+        }
+
+        // Jika belum diverifikasi, gunakan pemeriksaan otomatis.
         $kebutuhan = $this->normalize($case->kebutuhan);
         $kondisi = $this->normalize($case->kondisi);
 
-        // Informasi yang bertentangan atau tidak pasti
-        // tidak boleh diputuskan otomatis.
         $teks = trim($kebutuhan . ' ' . $kondisi);
 
         if ($teks === '') {
@@ -40,8 +53,6 @@ class HospitalReferralEligibilityService
             'sesak napas',
         ];
 
-        // Indikasi negatif dari laporan teks bebas
-        // tetap perlu ditinjau jika ada kemungkinan konflik.
         $penyangkalan = [
             'tidak butuh rumah sakit',
             'tidak perlu rumah sakit',
@@ -66,8 +77,6 @@ class HospitalReferralEligibilityService
             }
         }
 
-        // Tidak menemukan kata medis bukan berarti
-        // korban pasti tidak membutuhkan Rumah Sakit.
         return self::PERLU_VERIFIKASI;
     }
 
