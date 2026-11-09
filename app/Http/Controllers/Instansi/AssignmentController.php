@@ -79,16 +79,17 @@ class AssignmentController extends Controller
 
         $assignment = Assignment::query()
             ->with([
-                'resource.lokasiPangkalan',
-                'emergencyCase.lokasi',
+            'resource.lokasiPangkalan',
+            'emergencyCase.lokasi',
 
-                'statusPenanganan' => function (
-                    $query
-                ) {
-                    $query
-                        ->orderBy('waktu_update')
-                        ->orderBy('status_id');
-                },
+            // Data Hospital Referral untuk Card Informasi Rujukan
+            'emergencyCase.hospitalReferral.acceptedHospital',
+            'emergencyCase.hospitalReferral.requests',
+            'statusPenanganan' => function ($query) {
+                $query
+                    ->orderBy('waktu_update')
+                    ->orderBy('status_id');
+             },
             ])
             ->where(
                 'assignment_id',

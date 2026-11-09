@@ -665,6 +665,121 @@
                 </div>
 
             </section>
+            @php
+                $referral = $case->hospitalReferral;
+
+                $lastRequest = $referral?->requests
+                    ?->sortByDesc('attempt_order')
+                    ->first();
+
+                $referralLabels = [
+                    'mencari' => 'Sedang Diproses',
+                    'diterima' => 'Diterima',
+                    'gagal' => 'Gagal',
+                ];
+            @endphp
+
+            <section class="overflow-hidden rounded-2xl border
+                            border-rose-100 bg-white shadow-sm">
+
+                <div class="border-b border-slate-100 px-5 py-4">
+                    <h2 class="font-semibold text-slate-800">
+                        Informasi Rujukan Rumah Sakit
+                    </h2>
+
+                    <p class="mt-1 text-xs text-slate-400">
+                        Informasi hasil Hospital Matching.
+                    </p>
+                </div>
+
+                <div class="space-y-4 p-5">
+
+                    @if(!$referral)
+
+                        <div class="rounded-xl bg-slate-50 p-4">
+                            <p class="text-sm text-slate-600">
+                                Belum ada proses rujukan Rumah Sakit
+                                yang tercatat untuk kasus ini.
+                            </p>
+                        </div>
+
+                    @else
+
+                        <div>
+                            <p class="text-xs text-slate-400">
+                                Status Rujukan
+                            </p>
+
+                            <span class="mt-2 inline-flex rounded-full
+                                px-3 py-1 text-xs font-semibold
+                                {{ $referral->status === 'diterima'
+                                    ? 'bg-emerald-50 text-emerald-700'
+                                    : ($referral->status === 'gagal'
+                                        ? 'bg-red-50 text-red-700'
+                                        : 'bg-amber-50 text-amber-700') }}">
+                                {{ $referralLabels[$referral->status]
+                                    ?? $referral->status }}
+                            </span>
+                        </div>
+
+                        @if($referral->status === 'diterima')
+
+                            <div class="rounded-xl border border-emerald-100
+                                        bg-emerald-50 p-4">
+                                <p class="text-xs text-slate-500">
+                                    Rumah Sakit Tujuan
+                                </p>
+
+                                <p class="mt-1 font-semibold text-slate-800">
+                                    {{ $referral->acceptedHospital?->nama_rs
+                                        ?? 'Data RS penerima belum tersedia' }}
+                                </p>
+                            </div>
+
+                        @elseif($referral->status === 'mencari')
+
+                            <div class="rounded-xl bg-amber-50 p-4">
+                                <p class="text-sm text-amber-800">
+                                    Proses pencarian Rumah Sakit
+                                    masih berlangsung.
+                                </p>
+
+                                @if($lastRequest?->status === 'menunggu')
+                                    <p class="mt-2 text-xs text-amber-700">
+                                        Menunggu respons Rumah Sakit.
+                                    </p>
+                                @elseif($lastRequest?->status === 'ditolak')
+                                    <p class="mt-2 text-xs text-amber-700">
+                                        Permintaan terakhir ditolak.
+                                    </p>
+                                @elseif($lastRequest?->status === 'timeout')
+                                    <p class="mt-2 text-xs text-amber-700">
+                                        Permintaan terakhir melewati
+                                        batas waktu respons.
+                                    </p>
+                                @endif
+                            </div>
+
+                        @elseif($referral->status === 'gagal')
+
+                            <div class="rounded-xl border border-red-100
+                                        bg-red-50 p-4">
+                                <p class="text-sm font-semibold text-red-700">
+                                    Rujukan belum berhasil.
+                                </p>
+
+                                <p class="mt-2 text-sm text-red-600">
+                                    {{ $referral->failure_reason
+                                        ?? 'Tidak ada informasi alasan kegagalan.' }}
+                                </p>
+                            </div>
+
+                        @endif
+
+                    @endif
+
+                </div>
+            </section>
 
             <section
                 class="overflow-hidden rounded-2xl
