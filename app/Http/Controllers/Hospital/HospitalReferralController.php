@@ -11,12 +11,15 @@ use Illuminate\View\View;
 use App\Models\EmergencyCase;
 
 class HospitalReferralController extends Controller
-{public function index(Request $request): View{
+{
+public function index(Request $request): View
+{
     $user = $request->user();
 
     abort_unless(
-        $user && $user->role === 'rumah_sakit'
-            && $user->rumah_sakit_id,
+        $user &&
+        $user->role === 'rumah_sakit' &&
+        $user->rumah_sakit_id,
         403
     );
 
@@ -41,17 +44,38 @@ class HospitalReferralController extends Controller
             ->count(),
     ];
 
+    // Permintaan aktif tampil lebih dahulu.
     $requests = (clone $query)
         ->with('referral')
+        ->orderByRaw(
+            "CASE
+                WHEN status = 'menunggu' AND expires_at > ?
+                THEN 0 ELSE 1
+            END",
+            [now()]
+        )
         ->orderByDesc('requested_at')
         ->paginate(10);
+
+    // Ambil informasi kejadian dan lokasi secara efisien.
+    $caseIds = $requests->getCollection()
+        ->pluck('referral.case_id')
+        ->filter()
+        ->unique()
+        ->values();
+
+    $casesById = EmergencyCase::query()
+        ->with('lokasi')
+        ->whereIn('case_id', $caseIds)
+        ->get()
+        ->keyBy('case_id');
 
     return view('hospital.referrals.index', [
         'requests' => $requests,
         'stats' => $stats,
+        'casesById' => $casesById,
     ]);
 }
-
 
     public function start(
         int $caseId,

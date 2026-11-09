@@ -161,6 +161,27 @@
         </div>
     </div>
 
+    
+{{-- ALASAN PENOLAKAN --}}
+@if($referralRequest->status === 'ditolak')
+    <div class="detail-card">
+        <h2 class="section-title">
+            Alasan Penolakan
+        </h2>
+
+        <div class="rounded-xl border border-red-200 bg-red-50 p-4">
+            <p class="text-sm font-semibold text-red-700">
+                Permintaan rujukan ditolak oleh Rumah Sakit.
+            </p>
+
+            <p class="mt-2 text-sm text-slate-700">
+                {{ $referralRequest->rejection_reason
+                    ?: 'Tidak ada alasan penolakan yang dicantumkan.' }}
+            </p>
+        </div>
+    </div>
+@endif
+
     @if(
         $referralRequest->status === 'menunggu'
         && $referralRequest->referral->status === 'mencari'
