@@ -61,10 +61,4 @@ Route::middleware(['auth', 'role:instansi'])
             ->whereNumber('resourceId')
             ->name('units.destroy');
 
-        Route::get(
-        '/assignments/{assignmentId}',
-        [AssignmentController::class, 'show']
-        )
-        ->whereNumber('assignmentId')
-        ->name('assignments.show');
     });

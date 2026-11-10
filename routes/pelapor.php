@@ -4,7 +4,7 @@ use App\Http\Controllers\Pelapor\EmergencyCaseController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Pelapor\ReportStatusController;
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'role:pelapor'])->group(function () {
     Route::get(
         '/pelapor/laporan/buat',
         [EmergencyCaseController::class, 'create']
