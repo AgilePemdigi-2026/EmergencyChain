@@ -1,0 +1,75 @@
+x-laravel-env: &laravel-env
+    APP_NAME: EmergencyChain
+    APP_ENV: ${APP_ENV:-production}
+    APP_DEBUG: ${APP_DEBUG:-false}
+    APP_KEY: ${APP_KEY:?APP_KEY wajib diisi}
+    APP_URL: ${APP_URL:-http://localhost:8080}
+    LOG_CHANNEL: stderr
+
+    DB_CONNECTION: pgsql
+    DB_HOST: db
+    DB_PORT: "5432"
+    DB_DATABASE: ${DB_DATABASE:-emergencychain}
+    DB_USERNAME: ${DB_USERNAME:-emergencychain}
+    DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib diisi}
+
+    SESSION_DRIVER: database
+    CACHE_STORE: database
+    QUEUE_CONNECTION: database
+
+services:
+    web:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        restart: unless-stopped
+        environment: *laravel-env
+        volumes:
+            - laravel_storage:/var/www/html/storage
+        depends_on:
+            db:
+                condition: service_healthy
+
+    worker:
+        build:
+            context: .
+            dockerfile: docker/php/Dockerfile
+        restart: unless-stopped
+        user: "33:33"
+        command:
+            - php
+            - artisan
+            - queue:work
+            - database
+            - --queue=default
+            - --sleep=3
+            - --tries=3
+            - --timeout=90
+            - --max-time=3600
+        environment: *laravel-env
+        volumes:
+            - laravel_storage:/var/www/html/storage
+        depends_on:
+            db:
+                condition: service_healthy
+
+    db:
+        image: postgres:17-alpine
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: ${DB_DATABASE:-emergencychain}
+            POSTGRES_USER: ${DB_USERNAME:-emergencychain}
+            POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib diisi}
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        healthcheck:
+            test:
+                - CMD-SHELL
+                - pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"
+            interval: 5s
+            timeout: 5s
+            retries: 10
+
+volumes:
+    postgres_data:
+    laravel_storage:
