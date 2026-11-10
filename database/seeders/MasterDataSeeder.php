@@ -15,12 +15,57 @@ class MasterDataSeeder extends Seeder
 {
     public function run(): void
     {
+
         // ==========================================
-        // 1. DATA MASTER INSTANSI
+        // 1. DATA LOKASI PANGKALAN INSTANSI
         // ==========================================
 
-        // Polrestabes Surabaya
-        $polisi = Instansi::firstOrCreate(
+        $lokasiPolisi = Lokasi::firstOrCreate(
+            [
+                'alamat' => 'Jl. Sikatan No. 1, Krembangan Selatan, Surabaya, Jawa Timur 60175',
+            ],
+            [
+                'latitude' => -7.259900,
+                'longitude' => 112.750800,
+            ]
+        );
+
+        $lokasiDamkar = Lokasi::firstOrCreate(
+            [
+                'alamat' => 'Jl. Pasar Turi No. 21, Bubutan, Surabaya, Jawa Timur 60174',
+            ],
+            [
+                'latitude' => -7.2451166,
+                'longitude' => 112.7364212,
+            ]
+        );
+
+        $lokasiAmbulansRs = Lokasi::firstOrCreate(
+            [
+                'alamat' => 'Jl. Mayjen Prof. Dr. Moestopo No. 6-8, Airlangga, Gubeng, Surabaya, Jawa Timur 60286',
+            ],
+            [
+                'latitude' => -7.2681934182,
+                'longitude' => 112.7580586771,
+            ]
+        );
+
+        $lokasiAmbulansPmi = Lokasi::firstOrCreate(
+            [
+                'alamat' => 'Jl. Sumatera No. 71, Gubeng, Surabaya, Jawa Timur 60281',
+            ],
+            [
+                'latitude' => -7.2713,
+                'longitude' => 112.7479,
+            ]
+        );
+
+
+        // ==========================================
+        // 2. DATA MASTER INSTANSI
+        // ==========================================
+
+        $polisi = Instansi::updateOrCreate(
             [
                 'nama_instansi' => 'Polrestabes Surabaya',
             ],
@@ -28,11 +73,11 @@ class MasterDataSeeder extends Seeder
                 'jenis_instansi' => 'Kepolisian',
                 'alamat' => 'Jl. Sikatan No. 1, Krembangan Selatan, Surabaya, Jawa Timur 60175',
                 'no_telp' => '0313526011',
+                'lokasi_id' => $lokasiPolisi->lokasi_id,
             ]
         );
 
-        // Dinas Pemadam Kebakaran Surabaya
-        $damkar = Instansi::firstOrCreate(
+        $damkar = Instansi::updateOrCreate(
             [
                 'nama_instansi' => 'Dinas Pemadam Kebakaran dan Penyelamatan Kota Surabaya',
             ],
@@ -40,11 +85,11 @@ class MasterDataSeeder extends Seeder
                 'jenis_instansi' => 'Pemadam Kebakaran',
                 'alamat' => 'Jl. Pasar Turi No. 21, Bubutan, Surabaya, Jawa Timur 60174',
                 'no_telp' => '0313533843',
+                'lokasi_id' => $lokasiDamkar->lokasi_id,
             ]
         );
 
-        // Unit Ambulans RSUD Dr. Soetomo
-        $ambulansRs = Instansi::firstOrCreate(
+        $ambulansRs = Instansi::updateOrCreate(
             [
                 'nama_instansi' => 'Unit Ambulans RSUD Dr. Soetomo',
             ],
@@ -52,11 +97,11 @@ class MasterDataSeeder extends Seeder
                 'jenis_instansi' => 'Ambulans Rumah Sakit',
                 'alamat' => 'Jl. Mayjen Prof. Dr. Moestopo No. 6-8, Airlangga, Gubeng, Surabaya, Jawa Timur 60286',
                 'no_telp' => '0315501001',
+                'lokasi_id' => $lokasiAmbulansRs->lokasi_id,
             ]
         );
 
-        // PMI Kota Surabaya
-        $ambulansIndependen = Instansi::firstOrCreate(
+        $ambulansIndependen = Instansi::updateOrCreate(
             [
                 'nama_instansi' => 'PMI Kota Surabaya',
             ],
@@ -64,6 +109,7 @@ class MasterDataSeeder extends Seeder
                 'jenis_instansi' => 'Ambulans Independen',
                 'alamat' => 'Jl. Sumatera No. 71, Gubeng, Surabaya, Jawa Timur 60281',
                 'no_telp' => '03199443899',
+                'lokasi_id' => $lokasiAmbulansPmi->lokasi_id,
             ]
         );
 
@@ -98,56 +144,6 @@ class MasterDataSeeder extends Seeder
                 'kapasitas' => 100,
                 'kapasitas_tersedia' => 80,
                 'status' => 'aktif',
-            ]
-        );
-
-
-        // ==========================================
-        // 3. DATA LOKASI PANGKALAN RESOURCE
-        // ==========================================
-
-        // Lokasi pangkalan Polrestabes Surabaya
-        $lokasiPolisi = Lokasi::firstOrCreate(
-            [
-                'alamat' => 'Jl. Sikatan No. 1, Krembangan Selatan, Surabaya, Jawa Timur 60175',
-            ],
-            [
-                'latitude' => -7.259900,
-                'longitude' => 112.750800,
-            ]
-        );
-
-        // Lokasi pangkalan Damkar Surabaya
-        $lokasiDamkar = Lokasi::firstOrCreate(
-            [
-                'alamat' => 'Jl. Pasar Turi No. 21, Bubutan, Surabaya, Jawa Timur 60174',
-            ],
-            [
-                'latitude' => -7.2451166,
-                'longitude' => 112.7364212,
-            ]
-        );
-
-        // Lokasi pangkalan Ambulans RSUD Dr. Soetomo
-        $lokasiAmbulansRs = Lokasi::firstOrCreate(
-            [
-                'alamat' => 'Jl. Mayjen Prof. Dr. Moestopo No. 6-8, Airlangga, Gubeng, Surabaya, Jawa Timur 60286',
-            ],
-            [
-                'latitude' => -7.2681934182,
-                'longitude' => 112.7580586771,
-            ]
-        );
-
-        // Lokasi pangkalan PMI Kota Surabaya
-        $lokasiAmbulansPmi = Lokasi::firstOrCreate(
-            [
-                'alamat' => 'Jl. Sumatera No. 71, Gubeng, Surabaya, Jawa Timur 60281',
-            ],
-            [
-                // Koordinat perkiraan titik alamat markas PMI.
-                'latitude' => -7.2713,
-                'longitude' => 112.7479,
             ]
         );
 
