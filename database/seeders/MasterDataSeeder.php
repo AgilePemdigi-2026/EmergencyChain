@@ -16,93 +16,6 @@ class MasterDataSeeder extends Seeder
     public function run(): void
     {
         // ==========================================
-        // 1. DATA MASTER INSTANSI
-        // ==========================================
-
-        // Polrestabes Surabaya
-        $polisi = Instansi::firstOrCreate(
-            [
-                'nama_instansi' => 'Polrestabes Surabaya',
-            ],
-            [
-                'jenis_instansi' => 'Kepolisian',
-                'alamat' => 'Jl. Sikatan No. 1, Krembangan Selatan, Surabaya, Jawa Timur 60175',
-                'no_telp' => '0313526011',
-            ]
-        );
-
-        // Dinas Pemadam Kebakaran Surabaya
-        $damkar = Instansi::firstOrCreate(
-            [
-                'nama_instansi' => 'Dinas Pemadam Kebakaran dan Penyelamatan Kota Surabaya',
-            ],
-            [
-                'jenis_instansi' => 'Pemadam Kebakaran',
-                'alamat' => 'Jl. Pasar Turi No. 21, Bubutan, Surabaya, Jawa Timur 60174',
-                'no_telp' => '0313533843',
-            ]
-        );
-
-        // Unit Ambulans RSUD Dr. Soetomo
-        $ambulansRs = Instansi::firstOrCreate(
-            [
-                'nama_instansi' => 'Unit Ambulans RSUD Dr. Soetomo',
-            ],
-            [
-                'jenis_instansi' => 'Ambulans Rumah Sakit',
-                'alamat' => 'Jl. Mayjen Prof. Dr. Moestopo No. 6-8, Airlangga, Gubeng, Surabaya, Jawa Timur 60286',
-                'no_telp' => '0315501001',
-            ]
-        );
-
-        // PMI Kota Surabaya
-        $ambulansIndependen = Instansi::firstOrCreate(
-            [
-                'nama_instansi' => 'PMI Kota Surabaya',
-            ],
-            [
-                'jenis_instansi' => 'Ambulans Independen',
-                'alamat' => 'Jl. Sumatera No. 71, Gubeng, Surabaya, Jawa Timur 60281',
-                'no_telp' => '03199443899',
-            ]
-        );
-
-
-        // ==========================================
-        // 2. DATA MASTER RUMAH SAKIT
-        // ==========================================
-
-        $rs = RumahSakit::firstOrCreate(
-            [
-                'nama_rs' => 'RSUD Dr. Soetomo',
-            ],
-            [
-                'alamat' => 'Jl. Mayjen Prof. Dr. Moestopo No. 6-8, Airlangga, Gubeng, Surabaya, Jawa Timur 60286',
-                'latitude' => -7.2681934182,
-                'longitude' => 112.7580586771,
-                'kapasitas' => 100,
-                'kapasitas_tersedia' => 80,
-                'status' => 'aktif',
-            ]
-        );
-
-        // RS Universitas Airlangga (Simulasi)
-        $rsUnair = RumahSakit::firstOrCreate(
-            [
-                'nama_rs' => 'RS Universitas Airlangga',
-            ],
-            [
-                'alamat' => 'Jl. Dharmahusada Permai, Mulyorejo, Surabaya, Jawa Timur 60115',
-                'latitude' => -7.26970931,
-                'longitude' => 112.78482274,
-                'kapasitas' => 100,
-                'kapasitas_tersedia' => 80,
-                'status' => 'aktif',
-            ]
-        );
-
-
-        // ==========================================
         // 3. DATA LOKASI PANGKALAN RESOURCE
         // ==========================================
 
@@ -150,7 +63,111 @@ class MasterDataSeeder extends Seeder
                 'longitude' => 112.7479,
             ]
         );
+        // ==========================================
+        // 1. DATA MASTER INSTANSI
+        // ==========================================
 
+        // Polrestabes Surabaya
+        $polisi = Instansi::firstOrCreate(
+    [
+        'nama_instansi' => 'Polrestabes Surabaya',
+    ],
+    [
+        'jenis_instansi' => 'Kepolisian',
+        'alamat' => 'Jl. Sikatan No. 1, Krembangan Selatan, Surabaya, Jawa Timur 60175',
+        'no_telp' => '0313526011',
+        'lokasi_id' => $lokasiPolisi->lokasi_id,
+    ]
+);
+
+if (!$polisi->lokasi_id) {
+    $polisi->update(['lokasi_id' => $lokasiPolisi->lokasi_id]);
+}
+
+        // Dinas Pemadam Kebakaran Surabaya
+        $damkar = Instansi::firstOrCreate(
+    [
+        'nama_instansi' => 'Dinas Pemadam Kebakaran dan Penyelamatan Kota Surabaya',
+    ],
+    [
+        'jenis_instansi' => 'Pemadam Kebakaran',
+        'alamat' => 'Jl. Pasar Turi No. 21, Bubutan, Surabaya, Jawa Timur 60174',
+        'no_telp' => '0313533843',
+        'lokasi_id' => $lokasiDamkar->lokasi_id,
+    ]
+);
+
+if (!$damkar->lokasi_id) {
+    $damkar->update(['lokasi_id' => $lokasiDamkar->lokasi_id]);
+}
+
+        // Unit Ambulans RSUD Dr. Soetomo
+        $ambulansRs = Instansi::firstOrCreate(
+    [
+        'nama_instansi' => 'Unit Ambulans RSUD Dr. Soetomo',
+    ],
+    [
+        'jenis_instansi' => 'Ambulans Rumah Sakit',
+        'alamat' => 'Jl. Mayjen Prof. Dr. Moestopo No. 6-8, Airlangga, Gubeng, Surabaya, Jawa Timur 60286',
+        'no_telp' => '0315501001',
+        'lokasi_id' => $lokasiAmbulansRs->lokasi_id,
+    ]
+);
+
+if (!$ambulansRs->lokasi_id) {
+    $ambulansRs->update(['lokasi_id' => $lokasiAmbulansRs->lokasi_id]);
+}
+
+        // PMI Kota Surabaya
+        $ambulansIndependen = Instansi::firstOrCreate(
+    [
+        'nama_instansi' => 'PMI Kota Surabaya',
+    ],
+    [
+        'jenis_instansi' => 'Ambulans Independen',
+        'alamat' => 'Jl. Sumatera No. 71, Gubeng, Surabaya, Jawa Timur 60281',
+        'no_telp' => '03199443899',
+        'lokasi_id' => $lokasiAmbulansPmi->lokasi_id,
+    ]
+);
+
+if (!$ambulansIndependen->lokasi_id) {
+    $ambulansIndependen->update(['lokasi_id' => $lokasiAmbulansPmi->lokasi_id]);
+}
+
+
+        // ==========================================
+        // 2. DATA MASTER RUMAH SAKIT
+        // ==========================================
+
+        $rs = RumahSakit::firstOrCreate(
+            [
+                'nama_rs' => 'RSUD Dr. Soetomo',
+            ],
+            [
+                'alamat' => 'Jl. Mayjen Prof. Dr. Moestopo No. 6-8, Airlangga, Gubeng, Surabaya, Jawa Timur 60286',
+                'latitude' => -7.2681934182,
+                'longitude' => 112.7580586771,
+                'kapasitas' => 100,
+                'kapasitas_tersedia' => 80,
+                'status' => 'aktif',
+            ]
+        );
+
+        // RS Universitas Airlangga (Simulasi)
+        $rsUnair = RumahSakit::firstOrCreate(
+            [
+                'nama_rs' => 'RS Universitas Airlangga',
+            ],
+            [
+                'alamat' => 'Jl. Dharmahusada Permai, Mulyorejo, Surabaya, Jawa Timur 60115',
+                'latitude' => -7.26970931,
+                'longitude' => 112.78482274,
+                'kapasitas' => 100,
+                'kapasitas_tersedia' => 80,
+                'status' => 'aktif',
+            ]
+        );
 
         // ==========================================
         // 4. DATA RESOURCE MILIK INSTANSI

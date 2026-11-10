@@ -12,6 +12,7 @@ x-laravel-env: &laravel-env
     DB_DATABASE: ${DB_DATABASE:-emergencychain}
     DB_USERNAME: ${DB_USERNAME:-emergencychain}
     DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD wajib diisi}
+    DB_SSLMODE: ${DB_SSLMODE:-prefer}
 
     SESSION_DRIVER: database
     CACHE_STORE: database
