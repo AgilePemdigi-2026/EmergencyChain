@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test';
-import { defineBddConfig, cucumberReporter } from 'playwright-bdd';
+import { defineBddConfig } from 'playwright-bdd';
 
+const isDemoRun = process.argv.includes('--headed');
 
 const testDir = defineBddConfig({
   features: 'tests/e2e/features/**/*.feature',
@@ -13,33 +14,25 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  timeout: 60000,
+
+  timeout: isDemoRun ? 120000 : 60000,
 
   reporter: [
     ['list'],
-
-    // Laporan HTML bawaan Playwright
     ['html', {
       open: 'never',
       outputFolder: 'playwright-report',
     }],
-
-    // Laporan HTML Cucumber
-    cucumberReporter('html', {
-      outputFile: 'bdd-reports/cucumber.html',
-    }),
   ],
 
   use: {
     baseURL: 'http://127.0.0.1:8001',
     browserName: 'chromium',
 
-    // Browser terlihat saat demonstrasi
-    headless: false,
+    headless: !isDemoRun,
 
-    // Perlambat gerakan agar mudah diamati
     launchOptions: {
-      slowMo: 600,
+      slowMo: isDemoRun ? 600 : 0,
     },
 
     screenshot: 'only-on-failure',
