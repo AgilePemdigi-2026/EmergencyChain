@@ -15,95 +15,121 @@ class AssignmentController extends Controller
 {
     /**
      * Dashboard Assignment Instansi.
+     * Hanya menampilkan Assignment yang masih aktif.
      */
     public function index(Request $request): View
     {
-    $user = $request->user();
+        $user = $request->user();
 
-    // Data untuk kartu Assignment (dengan pagination).
-    $assignments = Assignment::query()
-        ->with([
-            'resource.lokasiPangkalan',
-            'emergencyCase.lokasi',
-            'statusPenanganan',
-        ])
-        ->whereHas('resource', function ($query) use ($user) {
-            $query->where('instansi_id', $user->instansi_id);
-        })
-        ->orderByDesc('waktu_assign')
-        ->paginate(15);
+        // Query dasar seluruh Assignment milik instansi.
+        $baseQuery = Assignment::query()
+            ->whereHas('resource', function ($query) use ($user) {
+                $query->where(
+                    'instansi_id',
+                    $user->instansi_id
+                );
+            });
 
-    // Data semua lokasi Assignment untuk peta Dashboard.
-    $mapLocations = Assignment::query()
-        ->with('emergencyCase.lokasi')
-        ->whereHas('resource', function ($query) use ($user) {
-            $query->where('instansi_id', $user->instansi_id);
-        })
-        ->get()
-        ->map(function ($assignment) {
-            $case = $assignment->emergencyCase;
-            $lokasi = $case?->lokasi;
+        // Ringkasan dihitung dari seluruh database,
+        // bukan hanya dari halaman pagination.
+        $totalAssignments = (clone $baseQuery)->count();
 
-            if (
-                !$lokasi ||
-                $lokasi->latitude === null ||
-                $lokasi->longitude === null
-            ) {
-                return null;
-            }
+        $completedAssignments = (clone $baseQuery)
+            ->where('status_assign', 'selesai')
+            ->count();
 
-            return [
-                'assignment_id' => $assignment->assignment_id,
-                'case_id' => $assignment->case_id,
-                'jenis_kejadian' => $case->jenis_kejadian,
-                'alamat' => $lokasi->alamat,
-                'latitude' => (float) $lokasi->latitude,
-                'longitude' => (float) $lokasi->longitude,
-            ];
-        })
-        ->filter()
-        ->values();
+        // Assignment ditolak atau dibatalkan tidak dianggap aktif.
+        $activeQuery = (clone $baseQuery)
+            ->whereNotIn('status_assign', [
+                'selesai',
+                'ditolak',
+                'dibatalkan',
+            ]);
 
-    return view(
-        'instansi.assignments.index',
-        compact('assignments', 'mapLocations')
-    );
-}
+        $activeAssignments = (clone $activeQuery)->count();
 
-        /**
-     * Detail Assignment milik Instansi yang login.
+        // Daftar card hanya menampilkan Assignment aktif.
+        $assignments = (clone $activeQuery)
+            ->with([
+                'resource.lokasiPangkalan',
+                'emergencyCase.lokasi',
+                'statusPenanganan',
+            ])
+            ->orderByDesc('waktu_assign')
+            ->paginate(15);
+
+        // Peta hanya menampilkan lokasi Assignment aktif.
+        $mapLocations = (clone $activeQuery)
+            ->with('emergencyCase.lokasi')
+            ->get()
+            ->map(function ($assignment) {
+                $case = $assignment->emergencyCase;
+                $lokasi = $case?->lokasi;
+
+                if (
+                    !$lokasi ||
+                    $lokasi->latitude === null ||
+                    $lokasi->longitude === null
+                ) {
+                    return null;
+                }
+
+                return [
+                    'assignment_id' => $assignment->assignment_id,
+                    'case_id' => $assignment->case_id,
+                    'jenis_kejadian' => $case?->jenis_kejadian,
+                    'alamat' => $lokasi->alamat,
+                    'latitude' => (float) $lokasi->latitude,
+                    'longitude' => (float) $lokasi->longitude,
+                ];
+            })
+            ->filter()
+            ->values();
+
+        return view(
+            'instansi.assignments.index',
+            compact(
+                'assignments',
+                'mapLocations',
+                'totalAssignments',
+                'completedAssignments',
+                'activeAssignments'
+            )
+        );
+    }
+
+    /**
+     * Detail Assignment milik Instansi login.
      */
-    public function show(Request $request, int $assignmentId): View
-    {
+    public function show(
+        Request $request,
+        int $assignmentId
+    ): View {
         $user = $request->user();
 
         $assignment = Assignment::query()
             ->with([
-            'resource.lokasiPangkalan',
-            'emergencyCase.lokasi',
+                'resource.lokasiPangkalan',
+                'emergencyCase.lokasi',
 
-            // Data Hospital Referral untuk Card Informasi Rujukan
-            'emergencyCase.hospitalReferral.acceptedHospital',
-            'emergencyCase.hospitalReferral.requests',
-            'statusPenanganan' => function ($query) {
-                $query
-                    ->orderBy('waktu_update')
-                    ->orderBy('status_id');
-             },
+                // Informasi rujukan rumah sakit.
+                'emergencyCase.hospitalReferral.acceptedHospital',
+                'emergencyCase.hospitalReferral.requests',
+
+                // Riwayat status diurutkan berdasarkan waktu.
+                'statusPenanganan' => function ($query) {
+                    $query
+                        ->orderBy('waktu_update')
+                        ->orderBy('status_id');
+                },
             ])
-            ->where(
-                'assignment_id',
-                $assignmentId
-            )
-            ->whereHas(
-                'resource',
-                function ($query) use ($user) {
-                    $query->where(
-                        'instansi_id',
-                        $user->instansi_id
-                    );
-                }
-            )
+            ->where('assignment_id', $assignmentId)
+            ->whereHas('resource', function ($query) use ($user) {
+                $query->where(
+                    'instansi_id',
+                    $user->instansi_id
+                );
+            })
             ->firstOrFail();
 
         $latestStatus = $assignment
@@ -111,13 +137,17 @@ class AssignmentController extends Controller
             ->last();
 
         return view(
-    'instansi.assignments.show',
-    compact(
-        'assignment',
-        'latestStatus'
-    )
-);
+            'instansi.assignments.show',
+            compact(
+                'assignment',
+                'latestStatus'
+            )
+        );
     }
+
+    /**
+     * Memperbarui status penanganan Assignment.
+     */
     public function updateStatus(
         Request $request,
         int $assignmentId,
@@ -130,7 +160,6 @@ class AssignmentController extends Controller
                     AssignmentStatusService::ALLOWED_STATUSES
                 ),
             ],
-
             'keterangan' => [
                 'required',
                 'string',
@@ -149,16 +178,11 @@ class AssignmentController extends Controller
         );
 
         if ($validated['status'] === 'selesai') {
-
-            $message =
-                $result['resource_released']
-                    ? 'Penanganan selesai. Resource tersedia kembali dan matching ulang telah dijalankan.'
-                    : 'Penanganan selesai. Resource masih memiliki Assignment aktif lain.';
-
+            $message = $result['resource_released']
+                ? 'Penanganan selesai. Resource tersedia kembali dan matching ulang telah dijalankan.'
+                : 'Penanganan selesai. Resource masih memiliki Assignment aktif lain.';
         } else {
-
-            $message =
-                'Status penanganan berhasil diperbarui.';
+            $message = 'Status penanganan berhasil diperbarui.';
         }
 
         return redirect()
@@ -166,9 +190,6 @@ class AssignmentController extends Controller
                 'instansi.assignments.show',
                 $assignmentId
             )
-            ->with(
-                'success',
-                $message
-            );
+            ->with('success', $message);
     }
 }

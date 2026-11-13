@@ -1,6 +1,7 @@
 @php
     $dashboardActive = request()->routeIs('instansi.assignments.index');
     $statusActive = request()->routeIs('instansi.assignments.show');
+    $historyActive = request()->routeIs('instansi.history.*');
     $unitActive = request()->routeIs('instansi.units.*');
 @endphp
 
@@ -77,25 +78,33 @@
         </a>
 
         {{-- Riwayat Penanganan --}}
-        {{-- Hanya tampilan menu dulu. Halaman khusus riwayat masuk Sprint 3. --}}
-        <div
-            class="mb-2 flex cursor-not-allowed items-center gap-3 rounded-xl
-                   px-4 py-3 text-sm font-medium text-slate-400"
-            title="Fitur akan tersedia pada sprint berikutnya"
+        <a
+            href="{{ route('instansi.history.index') }}"
+            class="relative mb-2 flex items-center gap-3 rounded-xl px-4 py-3
+                text-sm transition
+                {{ $historyActive
+                    ? 'bg-red-100 font-semibold text-red-500'
+                    : 'font-medium text-slate-500 hover:bg-rose-50 hover:text-red-500' }}"
         >
+            @if ($historyActive)
+                <span class="absolute -left-4 h-8 w-1 rounded-r-full bg-red-500"></span>
+            @endif
+
             <svg class="h-5 w-5 shrink-0"
-                 viewBox="0 0 24 24"
-                 fill="none"
-                 stroke="currentColor"
-                 stroke-width="1.8"
-                 aria-hidden="true">
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                aria-hidden="true">
                 <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
                 <rect x="9" y="3" width="6" height="4" rx="1"/>
                 <path d="M9 12h6M9 16h6"/>
             </svg>
 
             Riwayat Penanganan
-        </div>
+        </a>
+
+
 
         {{-- Kelola Unit --}}
         <a
