@@ -1,3 +1,4 @@
+
 @extends('layouts.instansi')
 
 @section('content')
@@ -5,33 +6,19 @@
 <div class="min-h-screen bg-rose-50/60 px-8 py-8">
 
     {{-- Header --}}
-    <div class="mb-8 flex items-start justify-between">
+    <div class="mb-8">
+        <p class="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
+            {{ strtoupper(auth()->user()->instansi->nama_instansi ?? 'INSTANSI PENANGANAN') }}
+            / OPERASIONAL
+        </p>
 
-        <div>
-            <p class="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
-                {{ strtoupper(auth()->user()->instansi->nama_instansi ?? 'INSTANSI PENANGANAN') }}
-                / OPERASIONAL
-            </p>
+        <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
+            Kelola Unit
+        </h1>
 
-            <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900">
-                Kelola Unit
-            </h1>
-
-            <p class="mt-1 text-sm text-slate-500">
-                Kelola unit operasional dan perbarui status ketersediaan resource.
-            </p>
-        </div>
-
-        <button
-            type="button"
-            data-modal-open="create-unit-modal"
-            class="inline-flex items-center gap-2 rounded-xl bg-red-500 px-6 py-3
-                   text-sm font-semibold text-white shadow-lg shadow-red-200
-                   transition hover:bg-red-600"
-        >
-            <span class="text-xl font-light">+</span>
-            Tambah Unit
-        </button>
+        <p class="mt-1 text-sm text-slate-500">
+            Pantau unit operasional dan perbarui status ketersediaan resource instansi.
+        </p>
     </div>
 
     {{-- Success / Error --}}
@@ -64,7 +51,7 @@
     {{-- Summary --}}
     <div class="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
 
-        {{-- Total --}}
+        {{-- Total Unit --}}
         <div class="rounded-2xl border border-slate-200 bg-white p-5">
             <div class="flex items-center justify-between">
                 <div>
@@ -93,7 +80,7 @@
             </div>
         </div>
 
-        {{-- Tersedia --}}
+        {{-- Unit Tersedia --}}
         <div class="rounded-2xl border border-slate-200 bg-white p-5">
             <div class="flex items-center justify-between">
                 <div>
@@ -116,7 +103,7 @@
             </div>
         </div>
 
-        {{-- Ditugaskan --}}
+        {{-- Sedang Ditugaskan --}}
         <div class="rounded-2xl border border-slate-200 bg-white p-5">
             <div class="flex items-center justify-between">
                 <div>
@@ -139,7 +126,7 @@
             </div>
         </div>
 
-        {{-- Tidak tersedia --}}
+        {{-- Tidak Tersedia --}}
         <div class="rounded-2xl border border-slate-200 bg-white p-5">
             <div class="flex items-center justify-between">
                 <div>
@@ -175,9 +162,7 @@
             name="search"
             value="{{ request('search') }}"
             placeholder="Cari berdasarkan nama unit..."
-            class="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm
-                   text-slate-700 outline-none transition
-                   focus:border-red-400 focus:ring-2 focus:ring-red-100"
+            class="rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm text-slate-700 outline-none transition focus:border-red-400 focus:ring-2 focus:ring-red-100"
         >
 
         <select
@@ -215,7 +200,7 @@
         </select>
     </form>
 
-    {{-- Table --}}
+    {{-- Daftar Unit --}}
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white">
 
         <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
@@ -243,19 +228,16 @@
                         <th class="px-5 py-4">Jenis Unit</th>
                         <th class="px-5 py-4">Kapasitas / Personel</th>
                         <th class="px-5 py-4">Ketersediaan</th>
-                        <th class="px-5 py-4">Aksi</th>
                     </tr>
                 </thead>
 
                 <tbody class="divide-y divide-slate-100">
 
                     @forelse($resources as $resource)
-                        @php
-                            $isAssigned = $resource->status_ketersediaan === \App\Models\Resource::STATUS_DITUGASKAN;
-                        @endphp
+
                         <tr class="transition hover:bg-slate-50/60">
 
-                            {{-- Unit --}}
+                            {{-- Nama Unit --}}
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
 
@@ -281,18 +263,21 @@
                                 </div>
                             </td>
 
+                            {{-- Jenis Unit --}}
                             <td class="px-5 py-4 text-sm text-slate-600">
                                 {{ $resource->jenis_resource }}
                             </td>
 
+                            {{-- Kapasitas --}}
                             <td class="px-5 py-4 text-sm font-semibold text-slate-700">
                                 {{ $resource->kapasitas_personel ?? '-' }}
+
                                 @if($resource->kapasitas_personel)
                                     personel
                                 @endif
                             </td>
 
-                            {{-- Availability --}}
+                            {{-- Status Ketersediaan --}}
                             <td class="px-5 py-4">
 
                                 @if(
@@ -300,12 +285,14 @@
                                     === \App\Models\Resource::STATUS_DITUGASKAN
                                 )
 
+                                    {{-- Unit sedang ditugaskan tidak dapat diubah --}}
                                     <span class="inline-flex rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-600">
                                         Sedang Ditugaskan
                                     </span>
 
                                 @else
 
+                                    {{-- Hanya boleh mengubah ketersediaan --}}
                                     <form
                                         method="POST"
                                         action="{{ route(
@@ -319,15 +306,14 @@
                                         <select
                                             name="status_ketersediaan"
                                             onchange="this.form.submit()"
-                                            class="
-                                                rounded-lg border-0 px-3 py-2 text-xs font-semibold
-                                                outline-none ring-1
+                                            aria-label="Status ketersediaan {{ $resource->nama_resource }}"
+                                            class="rounded-lg border-0 px-3 py-2 text-xs font-semibold outline-none ring-1
                                                 {{ $resource->status_ketersediaan === \App\Models\Resource::STATUS_TERSEDIA
                                                     ? 'bg-emerald-50 text-emerald-700 ring-emerald-100'
                                                     : 'bg-red-50 text-red-500 ring-red-100'
-                                                }}
-                                            "
+                                                }}"
                                         >
+
                                             <option
                                                 value="{{ \App\Models\Resource::STATUS_TERSEDIA }}"
                                                 @selected(
@@ -347,75 +333,11 @@
                                             >
                                                 Tidak Tersedia
                                             </option>
+
                                         </select>
                                     </form>
 
                                 @endif
-
-                            </td>
-
-                            {{-- Actions --}}
-                            <td class="px-5 py-4">
-
-                                <div class="flex items-center gap-2">
-
-                                    @if($isAssigned)
-
-                                        {{-- Edit disabled saat unit sedang ditugaskan --}}
-                                        <button
-                                            type="button"
-                                            disabled
-                                            title="Unit sedang dalam penanganan"
-                                            class="cursor-not-allowed rounded-lg border border-slate-200
-                                                   bg-slate-50 px-3 py-2 text-xs font-semibold
-                                                   text-slate-400 opacity-50"
-                                        >
-                                            ✎ Edit
-                                        </button>
-
-                                        {{-- Hapus disabled saat unit sedang ditugaskan --}}
-                                        <button
-                                            type="button"
-                                            disabled
-                                            title="Unit sedang dalam penanganan"
-                                            class="cursor-not-allowed rounded-lg border border-slate-200
-                                                   bg-slate-50 px-3 py-2 text-xs font-semibold
-                                                   text-slate-400 opacity-50"
-                                        >
-                                            🗑 Hapus
-                                        </button>
-
-                                    @else
-
-                                        <button
-                                            type="button"
-                                            data-edit-unit
-                                            data-id="{{ $resource->resource_id }}"
-                                            data-name="{{ $resource->nama_resource }}"
-                                            data-type="{{ $resource->jenis_resource }}"
-                                            data-capacity="{{ $resource->kapasitas_personel }}"
-                                            class="rounded-lg border border-slate-200 px-3 py-2 text-xs
-                                                   font-semibold text-blue-600 transition
-                                                   hover:bg-blue-50"
-                                        >
-                                            ✎ Edit
-                                        </button>
-
-                                        <button
-                                            type="button"
-                                            data-delete-unit
-                                            data-id="{{ $resource->resource_id }}"
-                                            data-name="{{ $resource->nama_resource }}"
-                                            class="rounded-lg border border-slate-200 px-3 py-2 text-xs
-                                                   font-semibold text-red-500 transition
-                                                   hover:bg-red-50"
-                                        >
-                                            🗑 Hapus
-                                        </button>
-
-                                    @endif
-
-                                </div>
 
                             </td>
                         </tr>
@@ -423,16 +345,13 @@
                     @empty
 
                         <tr>
-                            <td
-                                colspan="5"
-                                class="px-6 py-16 text-center"
-                            >
+                            <td colspan="4" class="px-6 py-16 text-center">
                                 <p class="font-medium text-slate-500">
                                     Belum terdapat unit.
                                 </p>
 
                                 <p class="mt-1 text-sm text-slate-400">
-                                    Tambahkan unit operasional untuk mulai mengelola ketersediaan.
+                                    Belum ada unit operasional yang terdaftar pada instansi ini.
                                 </p>
                             </td>
                         </tr>
@@ -443,6 +362,7 @@
             </table>
         </div>
 
+        {{-- Pagination --}}
         @if($resources->hasPages())
             <div class="border-t border-slate-100 px-6 py-4">
                 {{ $resources->links() }}
@@ -450,399 +370,7 @@
         @endif
 
     </div>
+
 </div>
-
-
-<div
-    id="create-unit-modal"
-    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/40 p-4"
->
-    <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
-
-        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
-            <div>
-                <h3 class="text-lg font-semibold text-slate-800">
-                    Tambah Unit
-                </h3>
-
-                <p class="mt-1 text-xs text-slate-400">
-                    Tambahkan resource operasional baru.
-                </p>
-            </div>
-
-            <button
-                type="button"
-                data-modal-close
-                class="text-xl text-slate-400 hover:text-slate-700"
-            >
-                ×
-            </button>
-        </div>
-
-        <form
-            method="POST"
-            action="{{ route('instansi.units.store') }}"
-            class="space-y-5 p-6"
-        >
-            @csrf
-
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-slate-700">
-                    Nama Unit
-                </label>
-
-                <input
-                    type="text"
-                    name="nama_resource"
-                    required
-                    maxlength="100"
-                    placeholder="Contoh: Damkar Unit 08"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                >
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-slate-700">
-                    Jenis Unit
-                </label>
-
-                <input
-                    type="text"
-                    name="jenis_resource"
-                    required
-                    maxlength="50"
-                    placeholder="Contoh: Unit Pemadam"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                >
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-slate-700">
-                    Kapasitas / Personel
-                </label>
-
-                <input
-                    type="number"
-                    name="kapasitas_personel"
-                    required
-                    min="1"
-                    max="999"
-                    placeholder="Contoh: 6"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
-                >
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-slate-700">
-                    Ketersediaan Awal
-                </label>
-
-                <select
-                    name="status_ketersediaan"
-                    required
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
-                >
-                    <option value="tersedia">Tersedia</option>
-                    <option value="tidak_tersedia">Tidak Tersedia</option>
-                </select>
-            </div>
-
-            <div class="flex justify-end gap-3 pt-2">
-
-                <button
-                    type="button"
-                    data-modal-close
-                    class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600"
-                >
-                    Batal
-                </button>
-
-                <button
-                    type="submit"
-                    class="rounded-xl bg-red-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-red-600"
-                >
-                    Tambah Unit
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-
-<div
-    id="edit-unit-modal"
-    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/40 p-4"
->
-    <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
-
-        <div class="flex items-center justify-between border-b border-slate-100 px-6 py-5">
-
-            <div>
-                <h3 class="text-lg font-semibold text-slate-800">
-                    Edit Unit
-                </h3>
-
-                <p class="mt-1 text-xs text-slate-400">
-                    Perbarui informasi unit operasional.
-                </p>
-            </div>
-
-            <button
-                type="button"
-                data-modal-close
-                class="text-xl text-slate-400 hover:text-slate-700"
-            >
-                ×
-            </button>
-
-        </div>
-
-        <form
-            id="edit-unit-form"
-            method="POST"
-            class="space-y-5 p-6"
-        >
-            @csrf
-            @method('PUT')
-
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-slate-700">
-                    Nama Unit
-                </label>
-
-                <input
-                    id="edit-name"
-                    name="nama_resource"
-                    type="text"
-                    required
-                    maxlength="100"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
-                >
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-slate-700">
-                    Jenis Unit
-                </label>
-
-                <input
-                    id="edit-type"
-                    name="jenis_resource"
-                    type="text"
-                    required
-                    maxlength="50"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
-                >
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-slate-700">
-                    Kapasitas / Personel
-                </label>
-
-                <input
-                    id="edit-capacity"
-                    name="kapasitas_personel"
-                    type="number"
-                    required
-                    min="1"
-                    max="999"
-                    class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
-                >
-            </div>
-
-            <div class="flex justify-end gap-3 pt-2">
-
-                <button
-                    type="button"
-                    data-modal-close
-                    class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600"
-                >
-                    Batal
-                </button>
-
-                <button
-                    type="submit"
-                    class="rounded-xl bg-red-500 px-6 py-2.5 text-sm font-semibold text-white"
-                >
-                    Simpan Perubahan
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-
-{{-- ========================================================= --}}
-{{-- DELETE MODAL --}}
-{{-- ========================================================= --}}
-
-<div
-    id="delete-unit-modal"
-    class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/40 p-4"
->
-    <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
-
-        <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-xl text-red-500">
-            !
-        </div>
-
-        <div class="mt-4 text-center">
-            <h3 class="text-lg font-semibold text-slate-800">
-                Hapus Unit?
-            </h3>
-
-            <p class="mt-2 text-sm leading-6 text-slate-500">
-                Unit
-                <strong id="delete-unit-name"></strong>
-                akan dihapus dari daftar operasional.
-            </p>
-        </div>
-
-        <form
-            id="delete-unit-form"
-            method="POST"
-            class="mt-6 flex justify-center gap-3"
-        >
-            @csrf
-            @method('DELETE')
-
-            <button
-                type="button"
-                data-modal-close
-                class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600"
-            >
-                Batal
-            </button>
-
-            <button
-                type="submit"
-                class="rounded-xl bg-red-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-red-600"
-            >
-                Hapus Unit
-            </button>
-        </form>
-
-    </div>
-</div>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    const openModal = (id) => {
-        const modal = document.getElementById(id);
-
-        if (!modal) return;
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-
-        document.body.classList.add('overflow-hidden');
-    };
-
-    const closeModal = (modal) => {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-
-        document.body.classList.remove('overflow-hidden');
-    };
-
-
-    // Generic modal opener
-    document
-        .querySelectorAll('[data-modal-open]')
-        .forEach(button => {
-            button.addEventListener('click', function () {
-                openModal(this.dataset.modalOpen);
-            });
-        });
-
-
-    // Generic modal closer
-    document
-        .querySelectorAll('[data-modal-close]')
-        .forEach(button => {
-            button.addEventListener('click', function () {
-                const modal = this.closest('.fixed');
-
-                if (modal) {
-                    closeModal(modal);
-                }
-            });
-        });
-
-
-    // Close when backdrop clicked
-    document
-        .querySelectorAll('.fixed[id$="-modal"]')
-        .forEach(modal => {
-            modal.addEventListener('click', function (event) {
-                if (event.target === this) {
-                    closeModal(this);
-                }
-            });
-        });
-
-
-    // Edit modal
-    document
-        .querySelectorAll('[data-edit-unit]')
-        .forEach(button => {
-            button.addEventListener('click', function () {
-
-                const id = this.dataset.id;
-
-                document.getElementById('edit-name').value =
-                    this.dataset.name || '';
-
-                document.getElementById('edit-type').value =
-                    this.dataset.type || '';
-
-                document.getElementById('edit-capacity').value =
-                    this.dataset.capacity || '';
-
-                document.getElementById('edit-unit-form').action =
-                    `{{ url('/instansi/units') }}/${id}`;
-
-                openModal('edit-unit-modal');
-            });
-        });
-
-
-    // Delete modal
-    document
-        .querySelectorAll('[data-delete-unit]')
-        .forEach(button => {
-            button.addEventListener('click', function () {
-
-                const id = this.dataset.id;
-                const name = this.dataset.name;
-
-                document.getElementById('delete-unit-name').textContent =
-                    `"${name}"`;
-
-                document.getElementById('delete-unit-form').action =
-                    `{{ url('/instansi/units') }}/${id}`;
-
-                openModal('delete-unit-modal');
-            });
-        });
-
-
-    // Escape closes modal
-    document.addEventListener('keydown', function (event) {
-
-        if (event.key !== 'Escape') {
-            return;
-        }
-
-        document
-            .querySelectorAll('.fixed[id$="-modal"]:not(.hidden)')
-            .forEach(closeModal);
-    });
-
-});
-</script>
 
 @endsection
