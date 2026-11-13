@@ -4,16 +4,6 @@
 @section('title', 'Dashboard Penanganan - EmergencyChain')
 
 @section('content')
-@php
-    // Data $assignments dikirim oleh AssignmentController.
-    $assignmentAktif = $assignments->getCollection()
-        ->whereNotIn('status_assign', ['selesai', 'ditolak', 'dibatalkan'])
-        ->count();
-
-    $selesaiPadaHalamanIni = $assignments->getCollection()
-        ->where('status_assign', 'selesai')
-        ->count();
-@endphp
 
 <div class="space-y-7">
 
@@ -50,43 +40,53 @@
     {{-- Ringkasan Dashboard --}}
     <div class="grid gap-4 md:grid-cols-3">
 
+        {{-- Assignment Aktif --}}
         <div class="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
             <p class="text-sm font-medium text-slate-500">
                 Assignment Aktif
             </p>
+
             <p class="mt-2 text-3xl font-bold text-slate-800">
-                {{ $assignmentAktif }}
+                {{ $activeAssignments }}
             </p>
+
             <p class="mt-1 text-xs text-slate-400">
-                Pada halaman ini
+                Seluruh Assignment aktif instansi Anda
             </p>
         </div>
 
+        {{-- Total Assignment --}}
         <div class="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
             <p class="text-sm font-medium text-slate-500">
                 Total Assignment
             </p>
+
             <p class="mt-2 text-3xl font-bold text-slate-800">
-                {{ $assignments->total() }}
+                {{ $totalAssignments }}
             </p>
+
             <p class="mt-1 text-xs text-slate-400">
-                Seluruh data instansi Anda
+                Seluruh Assignment instansi Anda
             </p>
         </div>
 
+        {{-- Penanganan Selesai --}}
         <div class="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm">
             <p class="text-sm font-medium text-slate-500">
                 Penanganan Selesai
             </p>
+
             <p class="mt-2 text-3xl font-bold text-slate-800">
-                {{ $selesaiPadaHalamanIni }}
+                {{ $completedAssignments }}
             </p>
+
             <p class="mt-1 text-xs text-slate-400">
-                Pada halaman ini
+                Seluruh Assignment selesai instansi Anda
             </p>
         </div>
 
     </div>
+
 
     {{-- Area Utama --}}
     <div class="grid items-start gap-5 xl:grid-cols-3">
@@ -193,7 +193,7 @@
 
                 @empty
                     <p class="col-span-full py-10 text-center text-sm text-slate-500">
-                        Belum ada Assignment untuk instansi Anda.
+                        Tidak ada Assignment aktif yang perlu ditangani.
                     </p>
                 @endforelse
 
