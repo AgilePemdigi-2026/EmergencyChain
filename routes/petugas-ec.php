@@ -3,8 +3,14 @@
 use App\Http\Controllers\PetugasEC\EmergencyCaseController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PetugasEC\ResourceMatchingController;
+use App\Http\Controllers\PetugasEC\DashboardController;
 
 Route::middleware('auth')->group(function () {
+
+    Route::get(
+        '/petugas-ec/dashboard',
+        [DashboardController::class, 'index']
+    )->name('petugas.ec.dashboard');
 
     Route::get(
         '/petugas-ec/emergency-cases',

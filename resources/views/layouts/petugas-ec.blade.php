@@ -32,7 +32,7 @@
 
                 {{-- Logo mobile --}}
                 <a
-                    href="{{ route('petugas.ec.cases.index') }}"
+                    href="{{ route('petugas.ec.dashboard') }}"
                     class="text-lg font-bold tracking-tight lg:hidden"
                 >
                     Emergency<span class="text-red-500">Chain</span>
@@ -61,14 +61,29 @@
             </header>
 
             {{-- Navigasi mobile --}}
-            <nav class="border-b border-slate-100 bg-white px-4 py-3 lg:hidden">
+            <nav class="flex gap-2 border-b border-slate-100 bg-white
+                        px-4 py-3 lg:hidden">
+
+                <a
+                    href="{{ route('petugas.ec.dashboard') }}"
+                    class="rounded-lg px-4 py-2 text-sm font-semibold transition
+                        {{ request()->routeIs('petugas.ec.dashboard')
+                            ? 'bg-red-100 text-red-500'
+                            : 'text-slate-500 hover:bg-rose-50' }}"
+                >
+                    Dashboard
+                </a>
+
                 <a
                     href="{{ route('petugas.ec.cases.index') }}"
-                    class="inline-flex rounded-lg bg-red-100
-                           px-4 py-2 text-sm font-semibold text-red-500"
+                    class="rounded-lg px-4 py-2 text-sm font-semibold transition
+                        {{ request()->routeIs('petugas.ec.cases.*')
+                            ? 'bg-red-100 text-red-500'
+                            : 'text-slate-500 hover:bg-rose-50' }}"
                 >
                     Emergency Case
                 </a>
+
             </nav>
 
             {{-- Konten halaman --}}

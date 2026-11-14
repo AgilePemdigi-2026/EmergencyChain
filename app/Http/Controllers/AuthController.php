@@ -70,7 +70,7 @@ class AuthController extends Controller
                 ->route('pelapor.laporan.create'),
 
             'petugas_ec' => redirect()
-                ->route('petugas.ec.cases.index'),
+                ->route('petugas.ec.dashboard'),
 
             'instansi' => redirect()
                 ->route('instansi.assignments.index'),
