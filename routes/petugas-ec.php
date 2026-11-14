@@ -4,6 +4,7 @@ use App\Http\Controllers\PetugasEC\EmergencyCaseController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PetugasEC\ResourceMatchingController;
 use App\Http\Controllers\PetugasEC\DashboardController;
+use App\Http\Controllers\PetugasEC\AssignmentController;
 
 Route::middleware('auth')->group(function () {
 
@@ -46,5 +47,10 @@ Route::middleware('auth')->group(function () {
         [EmergencyCaseController::class, 'hospitalMatchingPlaceholder']
     )->whereNumber('caseId')
     ->name('petugas.ec.cases.hospital-matching');
+
+    Route::get(
+        '/petugas-ec/assignments',
+        [AssignmentController::class, 'index']
+    )->name('petugas.ec.assignments.index');
 
 });

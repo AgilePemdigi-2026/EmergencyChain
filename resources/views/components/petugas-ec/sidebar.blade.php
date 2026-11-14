@@ -17,6 +17,10 @@
     $isHospitalMatching = request()->routeIs(
             'petugas.ec.cases.hospital-matching'
         );
+
+    $isAssignment = request()->routeIs(
+        'petugas.ec.assignments.index'
+    );
 @endphp
 
 <aside class="sticky top-0 flex h-screen w-full flex-col border-r
@@ -74,7 +78,7 @@
                 Dashboard
             </a>
         </div>
-        
+
         {{-- Emergency Case --}}
         <div class="relative my-2">
 
@@ -173,16 +177,34 @@
             </div>
         </div>
 
+        <div class="relative my-2">
 
-        <div class="my-2 flex items-center gap-3 rounded-xl px-4 py-3
-                    text-sm font-medium text-slate-500">
-            <svg class="h-5 w-5" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor"
-                 stroke-width="1.8" aria-hidden="true">
-                <rect x="5" y="4" width="14" height="17" rx="2"/>
-                <path d="M9 4V2h6v2M9 10h6M9 14h6"/>
-            </svg>
-            Assignment
+            @if ($isAssignment)
+                <span class="absolute -left-4 top-1/2 h-8 w-1
+                            -translate-y-1/2 rounded-r bg-red-500">
+                </span>
+            @endif
+
+            <a
+                href="{{ route('petugas.ec.assignments.index') }}"
+                @if ($isAssignment) aria-current="page" @endif
+                class="flex items-center gap-3 rounded-xl
+                    px-4 py-3 text-sm transition
+                    {{ $isAssignment
+                        ? 'bg-rose-100 font-semibold text-red-500'
+                        : 'font-medium text-slate-500 hover:bg-rose-50 hover:text-red-500' }}"
+            >
+                <svg class="h-5 w-5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8">
+                    <rect x="5" y="4" width="14" height="17" rx="2"/>
+                    <path d="M9 4V2h6v2M9 10h6M9 14h6"/>
+                </svg>
+
+                Assignment
+            </a>
         </div>
     </nav>
 
