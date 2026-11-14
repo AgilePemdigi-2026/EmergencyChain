@@ -31,20 +31,26 @@
                 </span>
 
                 {{-- Profil Instansi --}}
-                <div class="flex items-center gap-3">
-                    <div class="hidden text-right sm:block">
+                <a
+                    href="{{ route('profile.show') }}"
+                    class="inline-flex items-center gap-3 rounded-xl
+                        px-3 py-2 transition hover:bg-rose-50"
+                    title="Lihat Profil"
+                >
+                    <div class="text-right">
                         <p class="text-sm font-semibold text-slate-700">
-                            Instansi Penanganan
+                            {{ auth()->user()->nama }}
                         </p>
                         <p class="text-xs text-slate-400">
-                            Akun Instansi
+                            {{ str_replace('_', ' ', ucfirst(auth()->user()->role)) }}
                         </p>
                     </div>
 
-                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-xs font-bold text-red-500">
-                        IN
+                    <div class="flex h-10 w-10 items-center justify-center
+                                rounded-full bg-rose-100 font-bold text-red-500">
+                        {{ mb_strtoupper(mb_substr(auth()->user()->nama, 0, 1)) }}
                     </div>
-                </div>
+                </a>
 
             </header>
 
