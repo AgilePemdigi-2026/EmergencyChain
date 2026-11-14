@@ -19,7 +19,11 @@ class EmergencyCaseController extends Controller
     {
         abort_unless($request->user()?->role === 'petugas_ec', 403);
 
-        $cases = EmergencyCase::with(['pengguna', 'lokasi'])
+        $cases = EmergencyCase::with([
+            'pengguna',
+            'lokasi',
+            'assignments.resource',
+        ])
             ->orderByDesc('waktu_laporan')
             ->get();
 

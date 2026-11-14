@@ -153,9 +153,23 @@
                                 </span>
                             </td>
 
-                            {{-- Resource: belum ada Assignment --}}
-                            <td class="whitespace-nowrap px-4 py-4 text-slate-500">
-                                Belum ditugaskan
+                            {{-- Jenis Resource berdasarkan Assignment --}}
+                            <td class="px-4 py-4 text-slate-600">
+                                @php
+                                    $resourceTypes = $case->assignments
+                                        ->pluck('resource.jenis_resource')
+                                        ->filter()
+                                        ->unique()
+                                        ->values();
+                                @endphp
+
+                                @if ($resourceTypes->isNotEmpty())
+                                    {{ $resourceTypes->implode(', ') }}
+                                @else
+                                    <span class="text-slate-400">
+                                        Belum ditugaskan
+                                    </span>
+                                @endif
                             </td>
 
                             {{-- Aksi Detail --}}

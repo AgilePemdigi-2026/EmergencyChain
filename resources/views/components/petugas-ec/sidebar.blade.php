@@ -1,5 +1,9 @@
 
 @php
+    $isDashboard = request()->routeIs(
+    'petugas.ec.dashboard'
+    );
+
     $isEmergencyCase = request()->routeIs(
         'petugas.ec.cases.index',
         'petugas.ec.cases.show',
@@ -38,18 +42,39 @@
         </p>
 
         {{-- Dashboard --}}
-        <div class="mb-2 flex items-center gap-3 rounded-xl
-                    px-4 py-3 text-sm font-medium text-slate-500">
-            <svg class="h-5 w-5" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor"
-                 stroke-width="1.8" aria-hidden="true">
-                <rect x="3" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="3" width="7" height="7" rx="1"/>
-                <rect x="3" y="14" width="7" height="7" rx="1"/>
-                <rect x="14" y="14" width="7" height="7" rx="1"/>
-            </svg>
-            Dashboard
+        <div class="relative my-2">
+
+            @if ($isDashboard)
+                <span class="absolute -left-4 top-1/2 h-8 w-1
+                            -translate-y-1/2 rounded-r bg-red-500">
+                </span>
+            @endif
+
+            <a
+                href="{{ route('petugas.ec.dashboard') }}"
+                @if ($isDashboard) aria-current="page" @endif
+                class="flex items-center gap-3 rounded-xl
+                    px-4 py-3 text-sm transition
+                    {{ $isDashboard
+                        ? 'bg-red-100 font-semibold text-red-500'
+                        : 'font-medium text-slate-500 hover:bg-rose-50 hover:text-red-500' }}"
+            >
+                <svg class="h-5 w-5 shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    aria-hidden="true">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+
+                Dashboard
+            </a>
         </div>
+        
         {{-- Emergency Case --}}
         <div class="relative my-2">
 
