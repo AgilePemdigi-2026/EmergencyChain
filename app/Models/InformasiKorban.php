@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class InformasiKorban extends Model
 {
@@ -35,5 +37,23 @@ class InformasiKorban extends Model
             'case_id',
             'case_id'
         );
+    }
+
+    public function treatmentHistories(): HasMany
+    {
+        return $this->hasMany(
+            HospitalTreatmentHistory::class,
+            'informasi_id',
+            'informasi_id'
+        );
+    }
+
+    public function latestTreatmentHistory(): HasOne
+    {
+        return $this->hasOne(
+            HospitalTreatmentHistory::class,
+            'informasi_id',
+            'informasi_id'
+        )->latestOfMany('id');
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Validation\ValidationException;
 use App\Models\HospitalReferralRequest;
 use App\Models\Pengguna;
 use App\Jobs\ProcessHospitalReferralTimeout;
+use App\Models\InformasiKorban;
 
 class HospitalReferralService
 {
@@ -177,16 +178,41 @@ public function respond(
                 : null,
         ]);
 
-        if ($decision === 'diterima') {
-            $referral->update([
-                'status' => 'diterima',
-                'accepted_hospital_id' => $user->rumah_sakit_id,
-                'failure_reason' => null,
-            ]);
-        } else {
-            // Jika ditolak, cari kandidat berikutnya.
-            $this->sendNextRequest($referral);
-        }
+        
+if ($decision === 'diterima') {
+    $referral->update([
+        'status' => 'diterima',
+        'accepted_hospital_id' => $user->rumah_sakit_id,
+        'failure_reason' => null,
+    ]);
+
+    // Buat data pasien dari rujukan yang diterima.
+    $informasiKorban = InformasiKorban::firstOrCreate(
+        [
+            'case_id' => $referral->case_id,
+            'rumah_sakit_id' => $user->rumah_sakit_id,
+        ],
+        [
+            'kondisi_korban' =>
+                'Belum diperiksa oleh petugas rumah sakit',
+            'waktu_rujukan' => now(),
+            'status_penerimaan' => 'diterima',
+        ]
+    );
+
+    // Buat riwayat awal jika belum tersedia.
+    if (!$informasiKorban->treatmentHistories()->exists()) {
+        $informasiKorban->treatmentHistories()->create([
+            'status' => 'Dalam Penanganan',
+            'keterangan' => 'Rujukan diterima oleh rumah sakit.',
+            'diubah_oleh' => $user->pengguna_id,
+        ]);
+    }
+} else {
+    // Jika ditolak, cari kandidat berikutnya.
+    $this->sendNextRequest($referral);
+}
+
 
         return $referral->fresh(['requests', 'acceptedHospital']);
     });

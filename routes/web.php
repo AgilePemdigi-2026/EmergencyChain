@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Hospital\HospitalReferralController;
+use App\Http\Controllers\Hospital\HospitalPatientController;
 
 // Halaman utama
 Route::get('/', function () {
@@ -26,6 +27,24 @@ Route::middleware('auth')->group(function () {
         [HospitalReferralController::class, 'start']
     )->whereNumber('caseId')
      ->name('hospital.referrals.start');
+
+        // Hospital Patients
+    Route::get(
+        '/hospital/patients',
+        [HospitalPatientController::class, 'index']
+    )->name('hospital.patients.index');
+
+    Route::get(
+        '/hospital/patients/{informasiId}',
+        [HospitalPatientController::class, 'show']
+    )->whereNumber('informasiId')
+     ->name('hospital.patients.show');
+
+    Route::put(
+        '/hospital/patients/{informasiId}/status',
+        [HospitalPatientController::class, 'updateStatus']
+    )->whereNumber('informasiId')
+     ->name('hospital.patients.update-status');
 
     Route::get(
     '/hospital/referrals/{requestId}',

@@ -1,11 +1,16 @@
 @php
     $dashboardActive = request()->routeIs('hospital.referrals.index');
     $detailActive = request()->routeIs('hospital.referrals.show');
+
+    $patientsActive = request()->routeIs(
+        'hospital.patients.index',
+        'hospital.patients.show'
+    );
 @endphp
 
 <aside class="sticky top-0 flex h-screen w-full flex-col border-r border-slate-200 bg-white">
 
-    {{-- Brand - sama dengan Instansi --}}
+    {{-- Brand --}}
     <div class="px-6 pb-10 pt-8">
         <h1 class="whitespace-nowrap text-2xl font-bold tracking-tight text-slate-700">
             Emergency<span class="text-red-500">Chain</span>
@@ -24,24 +29,14 @@
         </p>
 
         {{-- Dashboard --}}
-        <a
-            href="{{ route('hospital.referrals.index') }}"
-            class="relative mb-2 flex items-center gap-3 rounded-xl px-4 py-3
-                   text-sm transition
-                   {{ $dashboardActive
-                       ? 'bg-red-100 font-semibold text-red-500'
-                       : 'font-medium text-slate-500 hover:bg-rose-50 hover:text-red-500' }}"
-        >
-            @if ($dashboardActive)
-                <span class="absolute -left-4 h-8 w-1 rounded-r-full bg-red-500"></span>
-            @endif
+        <a href="{{ route('hospital.referrals.index') }}"
+           class="relative mb-2 flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition
+           {{ $dashboardActive || $detailActive
+               ? 'bg-red-100 font-semibold text-red-500'
+               : 'font-medium text-slate-500 hover:bg-rose-50 hover:text-red-500' }}">
 
-            <svg class="h-5 w-5 shrink-0"
-                 viewBox="0 0 24 24"
-                 fill="none"
-                 stroke="currentColor"
-                 stroke-width="1.8"
-                 aria-hidden="true">
+            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="1.8">
                 <rect x="3" y="3" width="7" height="7" rx="1"/>
                 <rect x="14" y="3" width="7" height="7" rx="1"/>
                 <rect x="3" y="14" width="7" height="7" rx="1"/>
@@ -52,62 +47,61 @@
         </a>
 
         {{-- Status Emergency --}}
-        <a
-            href="{{ route('hospital.referrals.index') }}"
-            class="relative mb-2 flex items-center gap-3 rounded-xl px-4 py-3
-                   text-sm font-medium text-slate-500 transition
-                   hover:bg-rose-50 hover:text-red-500"
-        >
-            <svg class="h-5 w-5 shrink-0"
-                 viewBox="0 0 24 24"
-                 fill="none"
-                 stroke="currentColor"
-                 stroke-width="1.8"
-                 aria-hidden="true">
+        <a href="{{ route('hospital.referrals.index') }}"
+           class="mb-2 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-500 transition hover:bg-rose-50 hover:text-red-500">
+
+            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M3 12h4l2.2-5 4.2 10 2.1-5H21"/>
             </svg>
 
             Status Emergency
         </a>
 
+        {{-- Daftar Pasien --}}
+        <a href="{{ route('hospital.patients.index') }}"
+           class="relative mb-2 flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition
+           {{ $patientsActive
+               ? 'bg-red-100 font-semibold text-red-500'
+               : 'font-medium text-slate-500 hover:bg-rose-50 hover:text-red-500' }}">
+
+            @if($patientsActive)
+                <span class="absolute -left-4 h-8 w-1 rounded-r-full bg-red-500"></span>
+            @endif
+
+            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="10" cy="7" r="4"/>
+                <path d="M20 8v6M23 11h-6"/>
+            </svg>
+
+            Daftar Pasien
+        </a>
+
         {{-- Riwayat Penanganan --}}
-        {{-- Belum ada route khusus riwayat --}}
-        <div
-            class="mb-2 flex cursor-not-allowed items-center gap-3 rounded-xl
-                   px-4 py-3 text-sm font-medium text-slate-400"
-            title="Halaman riwayat belum tersedia"
-        >
-            <svg class="h-5 w-5 shrink-0"
-                 viewBox="0 0 24 24"
-                 fill="none"
-                 stroke="currentColor"
-                 stroke-width="1.8"
-                 aria-hidden="true">
+        <a href="{{ route('hospital.patients.index') }}"
+           class="mb-2 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-500 transition hover:bg-rose-50 hover:text-red-500">
+
+            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
                 <rect x="9" y="3" width="6" height="4" rx="1"/>
                 <path d="M9 12h6M9 16h6"/>
             </svg>
 
             Riwayat Penanganan
-        </div>
+        </a>
 
     </nav>
 
-    {{-- Logout - mekanisme asli tim --}}
+    {{-- Logout --}}
     <div class="mt-auto border-t border-slate-200 p-4">
-        <button
-            type="button"
-            data-logout-open
-            class="flex w-full items-center gap-3 rounded-xl px-4 py-3
-                   text-sm font-medium text-slate-500 transition
-                   hover:bg-rose-50 hover:text-red-500"
-        >
-            <svg class="h-5 w-5 shrink-0"
-                 viewBox="0 0 24 24"
-                 fill="none"
-                 stroke="currentColor"
-                 stroke-width="1.8"
-                 aria-hidden="true">
+        <button type="button" data-logout-open
+                class="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-500 transition hover:bg-rose-50 hover:text-red-500">
+
+            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                 <path d="m16 17 5-5-5-5M21 12H9"/>
             </svg>
