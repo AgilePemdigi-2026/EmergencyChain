@@ -65,5 +65,6 @@ require __DIR__.'/pelapor.php';
 require __DIR__.'/petugas-ec.php';
 require __DIR__.'/instansi.php';
 require __DIR__.'/profile.php';
+require __DIR__.'/notifications.php';
 
 
