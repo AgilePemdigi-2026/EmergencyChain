@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use Illuminate\Support\Facades\Log;
 use Throwable;
+use App\Services\Notification\NotificationService;
 
 class ResourceMatchingService
 {
@@ -37,9 +38,18 @@ class ResourceMatchingService
 
             // Kejadian yang belum memiliki pemetaan perlu diverifikasi.
             if ($requiredTypes === null) {
+                $oldStatus = $case->status_laporan;
+
                 $case->update([
                     'status_laporan' => 'Perlu Verifikasi',
                 ]);
+
+                $this->notifyStatusChanged(
+                    $case,
+                    $oldStatus,
+                    'Perlu Verifikasi',
+                    'Laporan Anda membutuhkan verifikasi Petugas EC.'
+                );
 
                 return [
                     'success' => false,
@@ -137,14 +147,35 @@ class ResourceMatchingService
             }
 
             // Perbarui status laporan berdasarkan hasil matching.
+            $oldStatus = $case->status_laporan;
+
             if (!empty($missing)) {
+                $newStatus = 'Menunggu Assignment';
+
                 $case->update([
-                    'status_laporan' => 'Menunggu Assignment',
+                    'status_laporan' => $newStatus,
                 ]);
+
+                $this->notifyStatusChanged(
+                    $case,
+                    $oldStatus,
+                    $newStatus,
+                    'Sistem masih mencari unit yang dibutuhkan untuk menangani laporan Anda.'
+                );
+
             } elseif ($case->status_laporan === 'Menunggu Assignment') {
+                $newStatus = 'Menunggu';
+
                 $case->update([
-                    'status_laporan' => 'Menunggu',
+                    'status_laporan' => $newStatus,
                 ]);
+
+                $this->notifyStatusChanged(
+                    $case,
+                    $oldStatus,
+                    $newStatus,
+                    'Unit yang dibutuhkan telah berhasil dialokasikan.'
+                );
             }
 
             return [
@@ -153,6 +184,48 @@ class ResourceMatchingService
                 'matched' => $matched,
                 'missing' => $missing,
             ];
+        });
+    }
+
+    /**
+     * Mengirim notifikasi ketika status Emergency Case berubah.
+     */
+    private function notifyStatusChanged(
+        EmergencyCase $case,
+        string $oldStatus,
+        string $newStatus,
+        string $message
+    ): void {
+        if ($oldStatus === $newStatus) {
+            return;
+        }
+
+        $caseId = (int) $case->case_id;
+        $penggunaId = (int) $case->pengguna_id;
+
+        DB::afterCommit(function () use (
+            $caseId,
+            $penggunaId,
+            $oldStatus,
+            $newStatus,
+            $message
+        ) {
+            try {
+                app(NotificationService::class)->sendToPelapor(
+                    $penggunaId,
+                    'Status Emergency Case Diperbarui',
+                    "Status EC-{$caseId} berubah dari {$oldStatus} menjadi {$newStatus}. {$message}",
+                    route('pelapor.laporan.show', [
+                        'caseId' => $caseId,
+                    ]),
+                    'emergency_case_status'
+                );
+            } catch (Throwable $exception) {
+                Log::error('Notifikasi perubahan status gagal dikirim.', [
+                    'case_id' => $caseId,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
         });
     }
 
