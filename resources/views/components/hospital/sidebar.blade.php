@@ -1,10 +1,20 @@
 @php
-    $dashboardActive = request()->routeIs('hospital.referrals.index');
-    $detailActive = request()->routeIs('hospital.referrals.show');
+    $dashboardActive = request()->routeIs(
+        'hospital.referrals.index',
+        'hospital.referrals.show'
+    );
+
+    $detailActive = request()->routeIs(
+        'hospital.referrals.show'
+    );
 
     $patientsActive = request()->routeIs(
         'hospital.patients.index',
         'hospital.patients.show'
+    );
+
+    $historyActive = request()->routeIs(
+        'hospital.patients.history'
     );
 @endphp
 
@@ -80,18 +90,25 @@
         </a>
 
         {{-- Riwayat Penanganan --}}
-        <a href="{{ route('hospital.patients.index') }}"
-           class="mb-2 flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-500 transition hover:bg-rose-50 hover:text-red-500">
+<a href="{{ route('hospital.patients.history') }}"
+   class="relative mb-2 flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition
+   {{ $historyActive
+       ? 'bg-red-100 font-semibold text-red-500'
+       : 'font-medium text-slate-500 hover:bg-rose-50 hover:text-red-500' }}">
 
-            <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="1.8">
-                <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
-                <rect x="9" y="3" width="6" height="4" rx="1"/>
-                <path d="M9 12h6M9 16h6"/>
-            </svg>
+    @if($historyActive)
+        <span class="absolute -left-4 h-8 w-1 rounded-r-full bg-red-500"></span>
+    @endif
 
-            Riwayat Penanganan
-        </a>
+    <svg class="h-5 w-5 shrink-0" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+        <rect x="9" y="3" width="6" height="4" rx="1"/>
+        <path d="M9 12h6M9 16h6"/>
+    </svg>
+
+    Riwayat Penanganan
+</a>
 
     </nav>
 

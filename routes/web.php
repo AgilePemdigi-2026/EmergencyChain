@@ -16,6 +16,11 @@ Route::middleware('auth')->group(function () {
         [HospitalReferralController::class, 'index']
     )->name('hospital.referrals.index');
 
+    Route::get(
+    '/hospital/patients/history',
+    [HospitalPatientController::class, 'history']
+)->name('hospital.patients.history');
+
     Route::post(
         '/hospital/referrals/{requestId}/respond',
         [HospitalReferralController::class, 'respond']

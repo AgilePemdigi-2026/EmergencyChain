@@ -45,15 +45,17 @@ class HospitalPatientController extends Controller
             abort(403, 'Akses hanya untuk rumah sakit.');
         }
 
-        $patient = InformasiKorban::with([
-            'emergencyCase.pengguna',
-            'emergencyCase.lokasi',
-            'treatmentHistories.petugas',
-        ])
-            ->where('rumah_sakit_id', $user->rumah_sakit_id)
-            ->where('status_penerimaan', 'diterima')
-            ->findOrFail($informasiId);
-
+        $patients = InformasiKorban::with([
+    'emergencyCase.lokasi',
+    'latestTreatmentHistory',
+])
+    ->where('rumah_sakit_id', $user->rumah_sakit_id)
+    ->where('status_penerimaan', 'diterima')
+    ->whereHas('latestTreatmentHistory', function ($query) {
+        $query->where('status', 'Dalam Penanganan');
+    })
+    ->latest('waktu_rujukan')
+    ->paginate(10);
         return view('hospital.patients.show', compact('patient'));
     }
 
@@ -105,4 +107,35 @@ class HospitalPatientController extends Controller
             ->route('hospital.patients.show', $informasiId)
             ->with('success', 'Status penanganan pasien berhasil diperbarui.');
     }
+
+    /**
+ * Menampilkan riwayat pasien yang sudah selesai ditangani.
+ */
+public function history(Request $request)
+{
+    $user = $request->user();
+
+    if ($user->role !== 'rumah_sakit' || !$user->rumah_sakit_id) {
+        abort(403, 'Akses hanya untuk rumah sakit.');
+    }
+
+    $histories = HospitalTreatmentHistory::with([
+    'informasiKorban.emergencyCase',
+    'petugas',
+])
+    ->where('status', 'Pasien Sudah Ditangani')
+    ->whereHas('informasiKorban', function ($query) use ($user) {
+        $query->where('rumah_sakit_id', $user->rumah_sakit_id)
+            ->where('status_penerimaan', 'diterima');
+    })
+    ->whereIn('id', function ($query) {
+        $query->selectRaw('MAX(id)')
+            ->from('hospital_treatment_histories')
+            ->groupBy('informasi_id');
+    })
+    ->latest('created_at')
+    ->paginate(10);
+    return view('hospital.patients.history', compact('histories'));
+}
+
 }
