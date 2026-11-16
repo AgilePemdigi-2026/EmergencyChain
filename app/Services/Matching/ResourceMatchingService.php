@@ -1,15 +1,14 @@
 <?php
 
 namespace App\Services\Matching;
-
 use App\Models\Assignment;
 use App\Models\EmergencyCase;
 use App\Models\Resource;
+use App\Services\Notification\NotificationService;
 use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 use Illuminate\Support\Facades\Log;
+use InvalidArgumentException;
 use Throwable;
-
 class ResourceMatchingService
 {
     /**
@@ -115,14 +114,36 @@ class ResourceMatchingService
 
                 $resource = $nearest['resource'];
 
-                // Buat Assignment otomatis.
-                Assignment::create([
+                // Buat Assignment otomatis.   
+                $assignment = Assignment::create([
                     'resource_id' => $resource->resource_id,
                     'case_id' => $case->case_id,
                     'waktu_assign' => now(),
                     'status_assign' => 'diterima',
                     'waktu_konfirmasi' => now(),
                 ]);
+
+                $instansiId = $resource->instansi_id;
+                $assignmentId = $assignment->assignment_id;
+                $resourceName = $resource->nama_resource;
+
+                DB::afterCommit(function () use (
+                    $instansiId,
+                    $assignmentId,
+                    $resourceName
+                ) {
+                    app(NotificationService::class)->sendToInstansi(
+                        $instansiId,
+                        'Penugasan Baru',
+                        "Unit {$resourceName} mendapatkan penugasan baru.",
+                        route('instansi.assignments.show', [
+                            'assignmentId' => $assignmentId,
+                        ]),
+                        'assignment'
+                    );
+                });
+
+
 
                 // Tandai Resource sudah dialokasikan.
                 $resource->update([
