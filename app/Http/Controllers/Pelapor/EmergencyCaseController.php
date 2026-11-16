@@ -13,6 +13,7 @@ use Illuminate\View\View;
 use App\Services\Hospital\HospitalReferralEligibilityService;
 use App\Services\Hospital\HospitalReferralService;
 use Illuminate\Support\Facades\Log;
+use App\Services\Notification\NotificationService;
 
 class EmergencyCaseController extends Controller
 {
@@ -64,6 +65,23 @@ class EmergencyCaseController extends Controller
             }
         } catch (\Throwable $exception) {
             Log::error('Hospital Matching otomatis gagal', [
+                'case_id' => $case->case_id,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+        // Kirim notifikasi kepada seluruh Petugas EC.
+        try {
+            app(NotificationService::class)->sendToRole(
+                'petugas_ec',
+                'Emergency Case Baru',
+                "Laporan Emergency Case EC-{$case->case_id} telah diterima dan membutuhkan penanganan.",
+                route('petugas.ec.cases.show', [
+                    'caseId' => $case->case_id,
+                ]),
+                'emergency_case'
+            );
+        } catch (\Throwable $exception) {
+            Log::error('Notifikasi Emergency Case baru gagal dikirim.', [
                 'case_id' => $case->case_id,
                 'error' => $exception->getMessage(),
             ]);
