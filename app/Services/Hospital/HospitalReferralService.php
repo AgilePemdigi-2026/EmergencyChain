@@ -10,6 +10,7 @@ use App\Models\HospitalReferralRequest;
 use App\Models\Pengguna;
 use App\Jobs\ProcessHospitalReferralTimeout;
 use App\Models\InformasiKorban;
+use App\Services\Notification\NotificationService;
 
 class HospitalReferralService
 {
@@ -101,8 +102,15 @@ class HospitalReferralService
                 'rejection_reason' => null,
             ]);
 
+
             // Jadwalkan timeout permintaan pertama.
-            $this->scheduleTimeout($request);
+$this->scheduleTimeout($request);
+
+// Kirim notifikasi kepada RS pertama.
+$this->notifyHospitalNewRequest(
+    $request,
+    (int) $caseId
+);
 
 
             return $referral->load('requests');
@@ -269,7 +277,15 @@ private function sendNextRequest(HospitalReferral $referral): void
         ),
         'responded_at' => null,
         'rejection_reason' => null,
-    ]);$this->scheduleTimeout($request);
+    ]);
+
+$this->scheduleTimeout($request);
+
+// Beri tahu RS berikutnya tentang permintaan baru.
+$this->notifyHospitalNewRequest(
+    $request,
+    (int) $referral->case_id
+);
 }
 
 
@@ -331,6 +347,36 @@ public function processTimeout(int $requestId): void
         $this->sendNextRequest($referral);
     });
 }
+
+
+/**
+ * Beri tahu RS setelah permintaan rujukan
+ * berhasil disimpan ke database.
+ */
+private function notifyHospitalNewRequest(
+    HospitalReferralRequest $request,
+    int $caseId
+): void {
+    $hospitalId = (int) $request->rumah_sakit_id;
+    $requestId = (int) $request->id;
+
+    DB::afterCommit(function () use (
+        $hospitalId,
+        $requestId,
+        $caseId
+    ) {
+        app(NotificationService::class)->sendToRumahSakit(
+            $hospitalId,
+            'Permintaan Rujukan Baru',
+            "Terdapat permintaan rujukan baru untuk Emergency Case #{$caseId}. Silakan periksa dan berikan respons.",
+            route('hospital.referrals.show', [
+                'requestId' => $requestId,
+            ]),
+            'hospital_referral'
+        );
+    });
+}
+
 
 /**
  * Jadwalkan timeout 100 detik setelah permintaan dibuat.
