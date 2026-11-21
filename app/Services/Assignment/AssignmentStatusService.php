@@ -9,6 +9,9 @@ use App\Models\Resource;
 use App\Models\StatusPenanganan;
 use App\Services\Matching\ResourceMatchingService;
 use Illuminate\Support\Facades\DB;
+use App\Services\Notification\NotificationService;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class AssignmentStatusService
 {
@@ -36,7 +39,7 @@ class AssignmentStatusService
             $assignmentId,
             $user,
             $status,
-            $keterangan
+            $keterangan,
         ) {
 
             // Pastikan Assignment benar-benar milik Instansi login.
@@ -69,6 +72,17 @@ class AssignmentStatusService
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            $previousStatus = StatusPenanganan::query()
+                ->where('assignment_id', $assignment->assignment_id)
+                ->orderByDesc('waktu_update')
+                ->orderByDesc('status_id')
+                ->value('status');
+
+            $previousCaseStatus = EmergencyCase::query()
+                ->where('case_id', $assignment->case_id)
+                ->lockForUpdate()
+                ->firstOrFail()
+                ->status_laporan;
             // Simpan riwayat status + catatan + waktu.
             StatusPenanganan::create([
                 'assignment_id' => $assignment->assignment_id,
@@ -120,6 +134,99 @@ class AssignmentStatusService
             $this->syncEmergencyCaseStatus(
                 $assignment->case_id
             );
+
+            $caseId = (int) $assignment->case_id;
+            $assignmentId = (int) $assignment->assignment_id;
+            $penggunaId = (int) EmergencyCase::query()
+                ->where('case_id', $caseId)
+                ->value('pengguna_id');
+
+            $newCaseStatus = EmergencyCase::query()
+                ->where('case_id', $caseId)
+                ->value('status_laporan');
+
+            $statusChanged = $previousStatus !== $status;
+
+            $caseCompleted = $previousCaseStatus !== 'Selesai'
+                && $newCaseStatus === 'Selesai';
+
+            $resourceName = $resource->nama_resource;
+
+            if ($statusChanged || $caseCompleted) {
+                DB::afterCommit(function () use (
+                    $caseId,
+                    $assignmentId,
+                    $penggunaId,
+                    $resourceName,
+                    $status,
+                    $statusChanged,
+                    $caseCompleted
+                ) {
+                    $notifications = app(NotificationService::class);
+
+                    if ($statusChanged) {
+                        $statusLabel = match ($status) {
+                            'menuju_lokasi' => 'sedang menuju lokasi',
+                            'tiba_di_lokasi' => 'telah tiba di lokasi',
+                            'dalam_penanganan' => 'sedang melakukan penanganan',
+                            'selesai' => 'telah menyelesaikan penanganan',
+                        };
+
+                        try {
+                            $notifications->sendToRole(
+                                'petugas_ec',
+                                'Pembaruan Status Assignment',
+                                "Unit {$resourceName} {$statusLabel} untuk EC-{$caseId}.",
+                                route('petugas.ec.cases.show', [
+                                    'caseId' => $caseId,
+                                ]),
+                                'status_update'
+                            );
+                        } catch (Throwable $exception) {
+                            Log::error('Notifikasi status Assignment gagal.', [
+                                'assignment_id' => $assignmentId,
+                                'error' => $exception->getMessage(),
+                            ]);
+                        }
+                    }
+
+                    if ($caseCompleted) {
+                        try {
+                            $notifications->sendToRole(
+                                'petugas_ec',
+                                'Emergency Case Selesai',
+                                "Seluruh Assignment untuk EC-{$caseId} telah selesai.",
+                                route('petugas.ec.cases.show', [
+                                    'caseId' => $caseId,
+                                ]),
+                                'status_update'
+                            );
+                        } catch (Throwable $exception) {
+                            Log::error('Notifikasi penyelesaian ke Petugas EC gagal.', [
+                                'case_id' => $caseId,
+                                'error' => $exception->getMessage(),
+                            ]);
+                        }
+
+                        try {
+                            $notifications->sendToPelapor(
+                                $penggunaId,
+                                'Penanganan Laporan Selesai',
+                                "Penanganan Emergency Case EC-{$caseId} telah selesai.",
+                                route('pelapor.laporan.show', [
+                                    'caseId' => $caseId,
+                                ]),
+                                'status_update'
+                            );
+                        } catch (Throwable $exception) {
+                            Log::error('Notifikasi penyelesaian ke Pelapor gagal.', [
+                                'case_id' => $caseId,
+                                'error' => $exception->getMessage(),
+                            ]);
+                        }
+                    }
+                });
+            }
 
             return [
                 'resource_released' => $resourceReleased,

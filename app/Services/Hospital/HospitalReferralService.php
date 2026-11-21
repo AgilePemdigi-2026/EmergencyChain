@@ -10,6 +10,9 @@ use App\Models\HospitalReferralRequest;
 use App\Models\Pengguna;
 use App\Jobs\ProcessHospitalReferralTimeout;
 use App\Models\InformasiKorban;
+use App\Services\Notification\NotificationService;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class HospitalReferralService
 {
@@ -80,6 +83,7 @@ class HospitalReferralService
                         . 'dengan kapasitas dan koordinat valid.',
                 ]);
 
+                $this->notifyReferralFailed($referral);
                 return $referral;
             }
 
@@ -101,8 +105,15 @@ class HospitalReferralService
                 'rejection_reason' => null,
             ]);
 
+
             // Jadwalkan timeout permintaan pertama.
-            $this->scheduleTimeout($request);
+$this->scheduleTimeout($request);
+
+// Kirim notifikasi kepada RS pertama.
+$this->notifyHospitalNewRequest(
+    $request,
+    (int) $caseId
+);
 
 
             return $referral->load('requests');
@@ -213,6 +224,11 @@ if ($decision === 'diterima') {
     $this->sendNextRequest($referral);
 }
 
+$this->notifyReferralResponse(
+    $referral,
+    $request,
+    $decision
+);
 
         return $referral->fresh(['requests', 'acceptedHospital']);
     });
@@ -251,6 +267,7 @@ private function sendNextRequest(HospitalReferral $referral): void
                 'Tidak ada kandidat Rumah Sakit berikutnya yang tersedia.',
         ]);
 
+        $this->notifyReferralFailed($referral);
         return;
     }
 
@@ -269,7 +286,15 @@ private function sendNextRequest(HospitalReferral $referral): void
         ),
         'responded_at' => null,
         'rejection_reason' => null,
-    ]);$this->scheduleTimeout($request);
+    ]);
+
+$this->scheduleTimeout($request);
+
+// Beri tahu RS berikutnya tentang permintaan baru.
+$this->notifyHospitalNewRequest(
+    $request,
+    (int) $referral->case_id
+);
 }
 
 
@@ -332,6 +357,121 @@ public function processTimeout(int $requestId): void
     });
 }
 
+
+/**
+ * Beri tahu RS setelah permintaan rujukan
+ * berhasil disimpan ke database.
+ */
+private function notifyHospitalNewRequest(
+    HospitalReferralRequest $request,
+    int $caseId
+): void {
+    $hospitalId = (int) $request->rumah_sakit_id;
+    $requestId = (int) $request->id;
+
+    DB::afterCommit(function () use (
+        $hospitalId,
+        $requestId,
+        $caseId
+    ) {
+        app(NotificationService::class)->sendToRumahSakit(
+            $hospitalId,
+            'Permintaan Rujukan Baru',
+            "Terdapat permintaan rujukan baru untuk Emergency Case #{$caseId}. Silakan periksa dan berikan respons.",
+            route('hospital.referrals.show', [
+                'requestId' => $requestId,
+            ]),
+            'hospital_referral'
+        );
+    });
+}
+
+
+/**
+ * Notifikasi respons penerimaan atau penolakan rujukan.
+ */
+private function notifyReferralResponse(
+    HospitalReferral $referral,
+    HospitalReferralRequest $request,
+    string $decision
+): void {
+    $caseId = (int) $referral->case_id;
+    $requestId = (int) $request->id;
+    $hospitalId = (int) $request->rumah_sakit_id;
+    $referralStatus = $referral->status;
+
+    $penggunaId = (int) EmergencyCase::query()
+        ->where('case_id', $caseId)
+        ->value('pengguna_id');
+
+    DB::afterCommit(function () use (
+        $caseId,
+        $requestId,
+        $hospitalId,
+        $penggunaId,
+        $decision,
+        $referralStatus
+    ) {
+        $notifications = app(NotificationService::class);
+
+        $accepted = $decision === 'diterima';
+
+        $title = $accepted
+            ? 'Rujukan Rumah Sakit Diterima'
+            : 'Rujukan Rumah Sakit Ditolak';
+
+        $message = $accepted
+            ? "Rumah Sakit #{$hospitalId} telah menerima rujukan EC-{$caseId}."
+            : "Rumah Sakit #{$hospitalId} menolak rujukan EC-{$caseId}. Status proses rujukan: {$referralStatus}.";
+
+        try {
+            $notifications->sendToRole(
+                'petugas_ec',
+                $title,
+                $message,
+                route('petugas.ec.cases.hospital-matching', [
+                    'caseId' => $caseId,
+                ]),
+                'hospital_referral'
+            );
+        } catch (Throwable $exception) {
+            Log::error('Notifikasi respons RS ke Petugas EC gagal.', [
+                'request_id' => $requestId,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
+        // Pelapor menerima notifikasi jika rujukan diterima
+        // atau jika penolakan masih diikuti pencarian RS lain.
+        if ($accepted || $referralStatus === 'mencari') {
+            $pelaporTitle = $accepted
+                ? 'Rujukan Korban Diterima'
+                : 'Pencarian Rumah Sakit Dilanjutkan';
+
+            $pelaporMessage = $accepted
+                ? "Rujukan korban untuk EC-{$caseId} telah diterima Rumah Sakit."
+                : "Rumah Sakit sebelumnya belum dapat menerima rujukan EC-{$caseId}. Sistem sedang mencari Rumah Sakit lain.";
+
+            try {
+                $notifications->sendToPelapor(
+                    $penggunaId,
+                    $pelaporTitle,
+                    $pelaporMessage,
+                    route('pelapor.laporan.show', [
+                        'caseId' => $caseId,
+                    ]),
+                    'hospital_referral'
+                );
+            } catch (Throwable $exception) {
+                Log::error('Notifikasi respons RS ke Pelapor gagal.', [
+                    'request_id' => $requestId,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+    });
+}
+
 /**
  * Jadwalkan timeout 100 detik setelah permintaan dibuat.
  */
@@ -345,4 +485,59 @@ private function scheduleTimeout(
         ->afterCommit();
 }
 
+
+
+/**
+ * Notifikasi ketika seluruh kandidat Rumah Sakit habis.
+ */
+private function notifyReferralFailed(
+    HospitalReferral $referral
+): void {
+    $caseId = (int) $referral->case_id;
+
+    $penggunaId = (int) EmergencyCase::query()
+        ->where('case_id', $caseId)
+        ->value('pengguna_id');
+
+    DB::afterCommit(function () use (
+        $caseId,
+        $penggunaId
+    ) {
+        $notifications = app(NotificationService::class);
+
+        try {
+            $notifications->sendToRole(
+                'petugas_ec',
+                'Rujukan Rumah Sakit Gagal',
+                "Rujukan EC-{$caseId} belum berhasil karena tidak ada kandidat Rumah Sakit yang dapat menerima.",
+                route('petugas.ec.cases.hospital-matching', [
+                    'caseId' => $caseId,
+                ]),
+                'hospital_referral'
+            );
+        } catch (Throwable $exception) {
+            Log::error('Notifikasi kegagalan RS ke Petugas EC gagal.', [
+                'case_id' => $caseId,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+
+        try {
+            $notifications->sendToPelapor(
+                $penggunaId,
+                'Rujukan Rumah Sakit Belum Berhasil',
+                "Rujukan korban untuk EC-{$caseId} belum mendapatkan Rumah Sakit penerima.",
+                route('pelapor.laporan.show', [
+                    'caseId' => $caseId,
+                ]),
+                'hospital_referral'
+            );
+        } catch (Throwable $exception) {
+            Log::error('Notifikasi kegagalan RS ke Pelapor gagal.', [
+                'case_id' => $caseId,
+                'error' => $exception->getMessage(),
+            ]);
+        }
+    });
+}
 }

@@ -107,15 +107,13 @@
                     {{ $case->lokasi?->alamat ?? 'Tidak tersedia' }}
                 </p>
             </div>
+            <div class="min-w-0 text-left">
+                <p class="text-xs font-medium text-slate-400">
+                    Kondisi Kejadian
+                </p>
+                <p class="mt-1.5 whitespace-pre-line break-words text-left text-sm font-semibold text-slate-700">{{ $case->kondisi ?? '-' }}</p>
+            </div>
 
-<div class="text-left">
-    <p class="text-left text-xs font-medium text-slate-400">
-        Kondisi Kejadian
-    </p>
-    <p class="mt-1.5 text-left whitespace-pre-wrap break-words text-sm text-slate-700">
-        {{ $case->kondisi ?? '-' }}
-    </p>
-</div>
 
             <div>
                 <p class="text-xs font-medium text-slate-400">Kebutuhan Penanganan</p>

@@ -12,6 +12,7 @@ use App\Services\Hospital\HospitalReferralEligibilityService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use App\Services\Hospital\HospitalReferralService;
+use App\Services\Notification\NotificationService;
 
 class EmergencyCaseController extends Controller
 {
@@ -175,19 +176,44 @@ class EmergencyCaseController extends Controller
             );
     }
 
-
     public function update(
         UpdateEmergencyCaseRequest $request,
         int $caseId
     ): RedirectResponse {
-        $case = EmergencyCase::findOrFail($caseId);
-
         $validated = $request->validated();
 
-        $case->update([
-            'kondisi' => $validated['kondisi'],
-            'kebutuhan' => $validated['kebutuhan'],
-        ]);
+        $case = DB::transaction(function () use ($caseId, $validated) {
+
+            $case = EmergencyCase::query()
+                ->where('case_id', $caseId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            // Perbarui informasi Emergency Case.
+            $case->fill([
+                'kondisi' => $validated['kondisi'],
+                'kebutuhan' => $validated['kebutuhan'],
+            ]);
+
+            // Hindari notifikasi jika tidak ada perubahan data.
+            if ($case->isDirty(['kondisi', 'kebutuhan'])) {
+
+                $case->save();
+
+                // Notifikasi hanya kepada Pelapor pemilik kasus.
+                app(NotificationService::class)->sendToPelapor(
+                    (int) $case->pengguna_id,
+                    'Informasi Emergency Case Diperbarui',
+                    "Informasi kondisi atau kebutuhan pada EC-{$case->case_id} telah diperbarui oleh Petugas EC.",
+                    route('pelapor.laporan.show', [
+                        'caseId' => $case->case_id,
+                    ]),
+                    'emergency_case'
+                );
+            }
+
+            return $case;
+        });
 
         return redirect()
             ->route('petugas.ec.cases.show', [
@@ -198,4 +224,5 @@ class EmergencyCaseController extends Controller
                 'Emergency Case berhasil diperbarui'
             );
     }
+
 }
