@@ -380,7 +380,7 @@ private function notifyHospitalNewRequest(
             "Terdapat permintaan rujukan baru untuk Emergency Case #{$caseId}. Silakan periksa dan berikan respons.",
             route('hospital.referrals.show', [
                 'requestId' => $requestId,
-            ]),
+                ], false),
             'hospital_referral'
         );
     });
