@@ -214,51 +214,57 @@
         </form>
     </div>
 
-    {{-- Riwayat Penanganan --}}
-    <div class="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
-        <h2 class="mb-2 text-lg font-bold text-slate-800">
-            Riwayat Penanganan
-        </h2>
+{{-- Riwayat Penanganan --}}
+<div class="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
+    <h2 class="mb-2 text-lg font-bold text-slate-800">
+        Riwayat Penanganan
+    </h2>
 
-        <p class="mb-6 text-sm text-slate-500">
-            Catatan perubahan status penanganan pasien.
-        </p>
+    <p class="mb-6 text-sm text-slate-500">
+        Catatan perubahan status penanganan pasien.
+    </p>
 
-        @if($patient->treatmentHistories->isEmpty())
-            <div class="rounded-xl bg-slate-50 p-6 text-center">
-                <p class="text-sm text-slate-500">
-                    Belum ada riwayat penanganan.
-                </p>
-            </div>
-        @else
-            <div class="relative space-y-6 border-l-2 border-rose-100 pl-6">
-                @foreach($patient->treatmentHistories->sortByDesc('created_at') as $history)
-                    <div class="relative">
-                        <span class="absolute -left-[31px] top-1 h-4 w-4 rounded-full border-2 border-white bg-red-400 ring-2 ring-rose-100"></span>
+    @if($patient->treatmentHistories->isEmpty())
+        <div class="rounded-xl bg-slate-50 p-6 text-center">
+            <p class="text-sm text-slate-500">
+                Belum ada riwayat penanganan.
+            </p>
+        </div>
+    @else
+        <div class="space-y-6">
+            @foreach($patient->treatmentHistories->sortByDesc('created_at') as $history)
+                <div class="relative border-l-2 border-rose-200 pl-7">
 
-                        <div class="flex flex-wrap items-center justify-between gap-2">
-                            <span class="font-semibold text-slate-800">
-                                {{ $history->status }}
-                            </span>
+                    {{-- Bulatan timeline --}}
+                    <span class="absolute -left-[9px] top-1 h-4 w-4 rounded-full border-2 border-white bg-red-400 ring-2 ring-rose-100"></span>
 
-                            <span class="text-xs text-slate-400">
-                                {{ $history->created_at?->format('d M Y, H:i') ?? '-' }}
-                            </span>
-                        </div>
+                    {{-- Status dan waktu --}}
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <span class="text-sm font-semibold text-slate-800">
+                            {{ $history->status }}
+                        </span>
 
-                        <p class="mt-2 text-sm leading-relaxed text-slate-600">
-                            {{ $history->keterangan ?: 'Tidak ada keterangan.' }}
-                        </p>
-
-                        <p class="mt-2 text-xs text-slate-400">
-                            Diubah oleh:
-                            {{ $history->petugas?->nama ?? 'Pengguna tidak tersedia' }}
-                        </p>
+                        <span class="text-xs text-slate-400">
+                            {{ $history->created_at?->format('d M Y, H:i') ?? '-' }}
+                        </span>
                     </div>
-                @endforeach
-            </div>
-        @endif
-    </div>
+
+                    {{-- Keterangan --}}
+                    <p class="mt-2 text-sm leading-relaxed text-slate-600">
+                        {{ $history->keterangan ?: 'Tidak ada keterangan.' }}
+                    </p>
+
+                    {{-- Petugas --}}
+                    <p class="mt-2 text-xs text-slate-400">
+                        Diubah oleh:
+                        {{ $history->petugas?->nama ?? 'Pengguna tidak tersedia' }}
+                    </p>
+                </div>
+            @endforeach
+        </div>
+    @endif
+</div>
+
 
 </div>
 @endsection
