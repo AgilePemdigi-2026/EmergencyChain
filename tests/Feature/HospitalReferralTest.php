@@ -48,7 +48,50 @@ class HospitalReferralTest extends TestCase
         );
     }
 
-    
+
+public function test_kata_pemicu_baru_membutuhkan_rumah_sakit(): void
+{
+    $service = new HospitalReferralEligibilityService();
+
+    $contohKondisi = [
+        'Korban dalam kondisi kritis',
+        'Seorang korban mengalami patah tulang',
+        'Korban tidak bernapas',
+        'Korban mengalami cedera kepala',
+        'Pasien mengalami serangan jantung',
+        'Korban mengalami perdarahan hebat',
+    ];
+
+    foreach ($contohKondisi as $kondisi) {
+        $case = new EmergencyCase([
+            'jenis_kejadian' => 'Kecelakaan',
+            'kondisi' => $kondisi,
+            'kebutuhan' => 'Bantuan petugas',
+        ]);
+
+        $this->assertSame(
+            HospitalReferralEligibilityService::PERLU_RS,
+            $service->check($case),
+            "Kondisi '{$kondisi}' seharusnya membutuhkan RS."
+        );
+    }
+}
+
+public function test_penyangkalan_tetap_memerlukan_verifikasi(): void
+{
+    $service = new HospitalReferralEligibilityService();
+
+    $case = new EmergencyCase([
+        'jenis_kejadian' => 'Kecelakaan',
+        'kondisi' => 'Tidak ada korban yang terluka',
+        'kebutuhan' => 'Tidak perlu rumah sakit',
+    ]);
+
+    $this->assertSame(
+        HospitalReferralEligibilityService::PERLU_VERIFIKASI,
+        $service->check($case)
+    );
+}
 public function test_referral_tidak_membuat_duplikasi(): void
 {
     Queue::fake();
