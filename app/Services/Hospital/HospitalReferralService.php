@@ -431,7 +431,7 @@ private function notifyReferralResponse(
                 $message,
                 route('petugas.ec.cases.hospital-matching', [
                     'caseId' => $caseId,
-                ]),
+                ], false),
                 'hospital_referral'
             );
         } catch (Throwable $exception) {
@@ -459,7 +459,7 @@ private function notifyReferralResponse(
                     $pelaporMessage,
                     route('pelapor.laporan.show', [
                         'caseId' => $caseId,
-                    ]),
+                    ], false),
                     'hospital_referral'
                 );
             } catch (Throwable $exception) {
@@ -512,7 +512,7 @@ private function notifyReferralFailed(
                 "Rujukan EC-{$caseId} belum berhasil karena tidak ada kandidat Rumah Sakit yang dapat menerima.",
                 route('petugas.ec.cases.hospital-matching', [
                     'caseId' => $caseId,
-                ]),
+                ], false),
                 'hospital_referral'
             );
         } catch (Throwable $exception) {
@@ -529,7 +529,7 @@ private function notifyReferralFailed(
                 "Rujukan korban untuk EC-{$caseId} belum mendapatkan Rumah Sakit penerima.",
                 route('pelapor.laporan.show', [
                     'caseId' => $caseId,
-                ]),
+                ], false),
                 'hospital_referral'
             );
         } catch (Throwable $exception) {

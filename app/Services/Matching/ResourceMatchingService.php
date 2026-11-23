@@ -237,7 +237,7 @@ class ResourceMatchingService
                     "Status EC-{$caseId} berubah dari {$oldStatus} menjadi {$newStatus}. {$message}",
                     route('pelapor.laporan.show', [
                         'caseId' => $caseId,
-                    ]),
+                    ], false),
                     'emergency_case_status'
                 );
             } catch (Throwable $exception) {

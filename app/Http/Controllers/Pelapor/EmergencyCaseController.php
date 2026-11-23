@@ -77,7 +77,7 @@ class EmergencyCaseController extends Controller
                 "Laporan Emergency Case EC-{$case->case_id} telah diterima dan membutuhkan penanganan.",
                 route('petugas.ec.cases.show', [
                     'caseId' => $case->case_id,
-                ]),
+                ], false),
                 'emergency_case'
             );
         } catch (\Throwable $exception) {
