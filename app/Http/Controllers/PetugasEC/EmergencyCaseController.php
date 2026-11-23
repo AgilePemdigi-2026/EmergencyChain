@@ -207,7 +207,7 @@ class EmergencyCaseController extends Controller
                     "Informasi kondisi atau kebutuhan pada EC-{$case->case_id} telah diperbarui oleh Petugas EC.",
                     route('pelapor.laporan.show', [
                         'caseId' => $case->case_id,
-                    ]),
+                    ], false),
                     'emergency_case'
                 );
             }

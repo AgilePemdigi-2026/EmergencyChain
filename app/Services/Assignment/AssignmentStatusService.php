@@ -179,7 +179,7 @@ class AssignmentStatusService
                                 "Unit {$resourceName} {$statusLabel} untuk EC-{$caseId}.",
                                 route('petugas.ec.cases.show', [
                                     'caseId' => $caseId,
-                                ]),
+                                ], false),
                                 'status_update'
                             );
                         } catch (Throwable $exception) {
@@ -198,7 +198,7 @@ class AssignmentStatusService
                                 "Seluruh Assignment untuk EC-{$caseId} telah selesai.",
                                 route('petugas.ec.cases.show', [
                                     'caseId' => $caseId,
-                                ]),
+                                ], false),
                                 'status_update'
                             );
                         } catch (Throwable $exception) {
@@ -215,7 +215,7 @@ class AssignmentStatusService
                                 "Penanganan Emergency Case EC-{$caseId} telah selesai.",
                                 route('pelapor.laporan.show', [
                                     'caseId' => $caseId,
-                                ]),
+                                ], false),
                                 'status_update'
                             );
                         } catch (Throwable $exception) {
