@@ -96,10 +96,8 @@
             >
         </div>
 
-        <!-- Remember Me dan Lupa Password -->
-        <div class="flex flex-wrap items-center
-                    justify-between gap-3">
-
+        <!-- Remember Me -->
+        <div>
             <label class="flex items-center gap-2
                           text-sm text-slate-500">
 
@@ -115,13 +113,6 @@
 
                 Ingat saya
             </label>
-
-            <!-- Tampilan sementara, fitur lupa password belum tersedia -->
-            <span class="text-sm font-medium
-                         text-red-500">
-                Lupa password?
-            </span>
-
         </div>
 
         <!-- Tombol Login -->
