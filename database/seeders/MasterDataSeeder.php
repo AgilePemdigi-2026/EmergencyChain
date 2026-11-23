@@ -325,6 +325,14 @@ if (!$ambulansIndependen->lokasi_id) {
                 'role' => 'instansi',
                 'instansi_id' => $ambulansIndependen->instansi_id,
             ],
+            // Akun Damkar
+            [
+                'nama' => 'Petugas Damkar Demo',
+                'no_telp' => '081200000017',
+                'email' => 'damkar@emergencychain.test',
+                'role' => 'instansi',
+                'instansi_id' => $damkar->instansi_id,
+            ],
         ];
 
         foreach ($accounts as $account) {
