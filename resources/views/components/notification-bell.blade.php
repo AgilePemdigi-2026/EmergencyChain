@@ -1,9 +1,9 @@
 <div
     id="notification-widget"
     class="relative"
-    data-index-url="{{ route('notifications.index') }}"
-    data-read-all-url="{{ route('notifications.read-all') }}"
-    data-read-url-template="{{ route('notifications.read', ['notificationId' => '__ID__']) }}"
+    data-index-url="{{ route('notifications.index', [], false) }}"
+    data-read-all-url="{{ route('notifications.read-all', [], false) }}"
+    data-read-url-template="{{ route('notifications.read', ['notificationId' => '__ID__'], false) }}"
 >
     <!-- Tombol lonceng -->
     <button
