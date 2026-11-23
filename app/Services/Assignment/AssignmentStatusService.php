@@ -177,7 +177,7 @@ class AssignmentStatusService
                                 'petugas_ec',
                                 'Pembaruan Status Assignment',
                                 "Unit {$resourceName} {$statusLabel} untuk EC-{$caseId}.",
-                                route('petugas.ec.cases.show', [
+                                route('petugas.ec.cases.resource-matching', [
                                     'caseId' => $caseId,
                                 ], false),
                                 'status_update'
