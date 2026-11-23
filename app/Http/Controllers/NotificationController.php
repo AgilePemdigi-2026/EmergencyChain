@@ -15,7 +15,7 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        $notifications = $user->notifications()
+        $notifications = $user->unreadNotifications()
             ->latest()
             ->limit(10)
             ->get()
