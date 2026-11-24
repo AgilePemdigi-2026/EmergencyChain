@@ -3,3 +3,4 @@ import './emergency-cases/create';
 import './emergency-cases/location-map';
 import './emergency-cases/show-map';
 import './instansi/assignments-map';
+import './shared/password-toggle';

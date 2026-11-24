@@ -73,27 +73,18 @@
         <!-- Password -->
         <div>
             <label for="password"
-                   class="mb-2 block text-sm
-                          font-medium text-slate-800">
+                class="mb-2 block text-sm
+                        font-medium text-slate-800">
                 Password
             </label>
 
-            <input
-                type="password"
+            <x-password-input
                 id="password"
                 name="password"
                 placeholder="Masukkan password"
                 autocomplete="current-password"
                 required
-                class="w-full rounded-xl border
-                       @error('password') border-red-500 @else border-slate-200 @enderror
-                       bg-white px-4 py-3
-                       text-sm text-slate-800
-                       outline-none transition
-                       placeholder:text-slate-400
-                       focus:border-red-500
-                       focus:ring-2 focus:ring-red-100"
-            >
+            />
         </div>
 
         <!-- Remember Me -->

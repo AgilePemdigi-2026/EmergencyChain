@@ -141,56 +141,19 @@
             <!-- Password -->
             <div>
                 <label for="password"
-                       class="mb-2 block text-sm font-medium text-slate-800">
+                    class="mb-2 block text-sm font-medium text-slate-800">
                     Password
                     <span class="text-red-500">*</span>
                 </label>
 
-                <div class="relative">
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        placeholder="Masukkan password"
-                        autocomplete="new-password"
-                        minlength="8"
-                        required
-                        class="w-full rounded-xl border
-                               @error('password') border-red-500 @else border-slate-200 @enderror
-                               bg-white py-3 pl-4 pr-12
-                               text-sm text-slate-800
-                               outline-none transition
-                               placeholder:text-slate-400
-                               focus:border-red-500
-                               focus:ring-2 focus:ring-red-100"
-                    >
-
-                    <!-- Show / Hide Password -->
-                    <button
-                        type="button"
-                        id="togglePassword"
-                        aria-label="Tampilkan password"
-                        aria-pressed="false"
-                        aria-controls="password"
-                        class="absolute inset-y-0 right-0 flex
-                               items-center px-4 text-slate-400
-                               hover:text-red-500"
-                    >
-                        <svg
-                            class="h-5 w-5"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                        >
-                            <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                    </button>
-                </div>
+                <x-password-input
+                    id="password"
+                    name="password"
+                    placeholder="Masukkan password"
+                    autocomplete="new-password"
+                    minlength="8"
+                    required
+                />
 
                 <p class="mt-2 text-xs text-slate-400">
                     Minimal 8 karakter, huruf besar, huruf kecil,
@@ -207,30 +170,20 @@
             <!-- Konfirmasi Password -->
             <div>
                 <label for="password_confirmation"
-                       class="mb-2 block text-sm font-medium text-slate-800">
+                    class="mb-2 block text-sm font-medium text-slate-800">
                     Konfirmasi Password
                     <span class="text-red-500">*</span>
                 </label>
 
-                <input
-                    type="password"
+                <x-password-input
                     id="password_confirmation"
                     name="password_confirmation"
                     placeholder="Masukkan ulang password"
                     autocomplete="new-password"
                     minlength="8"
                     required
-                    class="w-full rounded-xl border
-                           border-slate-200 bg-white
-                           px-4 py-3 text-sm text-slate-800
-                           outline-none transition
-                           placeholder:text-slate-400
-                           focus:border-red-500
-                           focus:ring-2 focus:ring-red-100"
-                >
+                />
             </div>
-
-        </div>
 
         <!-- Persetujuan -->
         <div class="flex items-start gap-3">
@@ -278,31 +231,5 @@
     </p>
 
 </div>
-
-<!-- JavaScript: Toggle Password -->
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const passwordInput = document.getElementById('password');
-        const toggleButton = document.getElementById('togglePassword');
-
-        if (!passwordInput || !toggleButton) return;
-
-        toggleButton.addEventListener('click', function () {
-            const isHidden = passwordInput.type === 'password';
-
-            passwordInput.type = isHidden ? 'text' : 'password';
-
-            toggleButton.setAttribute(
-                'aria-label',
-                isHidden ? 'Sembunyikan password' : 'Tampilkan password'
-            );
-
-            toggleButton.setAttribute(
-                'aria-pressed',
-                String(isHidden)
-            );
-        });
-    });
-</script>
 
 @endsection
